@@ -3,7 +3,7 @@ Benchmarking for the ISCC library.
 """
 from setuptools import find_packages, setup
 
-dependencies = ['click']
+dependencies = ['click', 'isbnlib']
 
 setup(
     name='isccbench',

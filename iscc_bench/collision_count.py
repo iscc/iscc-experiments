@@ -1,37 +1,35 @@
 # -*- coding: utf-8 -*-
 import time
 from iscclib.meta import MetaID
-import csv
 import re
+from iscc_bench.readers.bxbooks import bxbooks
 
 
-def count_collisions_csv(path, title_field, author_field, isbn_field, skip_first_line, skip):
+def count_collisions_csv(reader=bxbooks, skip=0):
     start_time = time.time()
     collisions = dict()
     duplicates = 0
-    with open(path) as csv_file:
-        reader = csv.DictReader(csv_file, delimiter=';') # todo: read delimiter or give it as parameter
-        for i, row in enumerate(reader):
-            if skip_first_line and i == 0:
+
+    data = reader()
+    for i, entry in enumerate(data):
+        if skip:
+            if i % (int(skip) + 1) != 0:
                 continue
-            if skip:
-                if i % (int(skip) + 1) != 0:
-                    continue
-            mid = MetaID.from_meta(
-                row[str(title_field)], row[str(author_field)]
+        mid = MetaID.from_meta(entry.title, entry.creators)
+
+        if mid.code in collisions:
+            duplicates += 1
+            collisions[mid.code]['collisions'] += 1
+            collisions[mid.code]['articles'].update(
+                {collisions[mid.code]['collisions']:
+                     entry._asdict()
+            }
             )
-            if str(mid) in collisions:
-                duplicates += 1
-                collisions[str(mid)]['collisions'] += 1
-                collisions[str(mid)]['articles'].update(
-                    {collisions[str(mid)]['collisions']: {'title': row[title_field], 'author': row[author_field],
-                                                          'isbn': row[isbn_field]}}
-                )
-            else:
-                entry = {
-                    'articles': {0: {'title': row[title_field], 'author': row[author_field], 'isbn': row[isbn_field]}},
-                    'collisions': 0}
-                collisions[str(mid)] = entry
+        else:
+            entry = {
+                'articles': {0: entry._asdict()},
+                'collisions': 0}
+            collisions[mid.code] = entry
 
     # count real collisions
     isbn_collisions = 0
