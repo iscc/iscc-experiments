@@ -5,7 +5,7 @@ import csv
 import re
 
 
-def count_collisions_csv(path, title_field, author_field, skip_first_line, skip):
+def count_collisions_csv(path, title_field, author_field, isbn_field, skip_first_line, skip):
     start_time = time.time()
     collisions = dict()
     duplicates = 0
@@ -24,35 +24,42 @@ def count_collisions_csv(path, title_field, author_field, skip_first_line, skip)
                 duplicates += 1
                 collisions[str(mid)]['collisions'] += 1
                 collisions[str(mid)]['articles'].update(
-                    {collisions[str(mid)]['collisions']: {'title': row[title_field], 'author': row[author_field]}}
+                    {collisions[str(mid)]['collisions']: {'title': row[title_field], 'author': row[author_field],
+                                                          'isbn': row[isbn_field]}}
                 )
             else:
-                entry = {'articles': {0: {'title': row[title_field], 'author': row[author_field]}}, 'collisions': 0}
+                entry = {
+                    'articles': {0: {'title': row[title_field], 'author': row[author_field], 'isbn': row[isbn_field]}},
+                    'collisions': 0}
                 collisions[str(mid)] = entry
 
     # count real collisions
-    real_collision = 0
+    isbn_collisions = 0
+    real_collisions = 0
     for entry in collisions:
         if collisions[entry]['collisions'] > 0:
             collision_article = False
             first_article = collisions[entry]['articles'][0]
             for key, article in collisions[entry]['articles'].items():
-                if clear_string(article['title']) != clear_string(first_article['title']):
-                    collision_article = True
-                if different_author(article['author'], first_article['author']):
-                    collision_article = True
+                if article['isbn'] != first_article['isbn']:
+                    isbn_collisions += 1
+                    if clear_string(article['title']) != clear_string(first_article['title']):
+                        collision_article = True
+                    if different_author(article['author'], first_article['author']):
+                        collision_article = True
 
             if collision_article:
-                real_collision += 1
+                real_collisions += 1
                 print("\n Meta-ID collision:")
                 for key, article in collisions[entry]['articles'].items():
-                    print("\n Record " + str(key) + ": " + article['title'] + " - " + article['author'])
+                    print("\n Record " + str(key) + ": " + article['isbn'] + " - " + article['title'] + " - " + article['author'])
 
     # console output
     end_time = time.time()
-    print("\n Considered records: " + str(len(collisions) + duplicates))
+    print("\nConsidered records: " + str(len(collisions) + duplicates))
     print("Duplicate Meta-IDs: " + str(duplicates))
-    print("\"Real\" Collisions: " + str(real_collision))
+    print("ISBN Collisions: " + str(isbn_collisions))
+    print("\"Real\" Collisions: " + str(real_collisions))
     print("Time: " + str(round(end_time - start_time, 2)) + " seconds")
 
 
