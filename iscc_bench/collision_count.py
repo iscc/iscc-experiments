@@ -15,7 +15,7 @@ def count_collisions_csv(reader=bxbooks, skip=0):
         if skip:
             if i % (int(skip) + 1) != 0:
                 continue
-        mid = MetaID.from_meta(entry.title, entry.creators)
+        mid = MetaID.from_meta(entry.title, entry.author)
 
         if mid.code in collisions:
             duplicates += 1
