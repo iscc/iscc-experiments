@@ -13,12 +13,6 @@ DNB_TITLES = os.path.join(DATA_DIR, 'DNBtitel.rdf')
 
 BaseTitle = namedtuple('Title', 'title subtitle authors')
 
-# @prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
-# @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
-# @prefix owl: <http://www.w3.org/2002/07/owl#> .
-# @prefix dc: <http://purl.org/dc/elements/1.1/> .
-nsmap = {'dc': 'http://purl.org/dc/elements/1.1/'}
-
 dropped = 0
 
 
@@ -44,13 +38,15 @@ def fast_iter(context, func, *args, **kwargs):
     entries = []
     last_parent = None
     for event, elem in context:
-        if counter >= 10000:
+        if counter >= 100000:
             break
         if last_parent == elem.getparent():  # we iter over two tags so sometimes we visit the sam parent more than one time
             continue
         else:
             counter += 1
             last_parent = elem.getparent()
+        if counter % 1000 == 0:
+            print(str(counter))
 
         function_entries = func(elem.getparent(), *args, **kwargs)
         if function_entries is not None:
@@ -93,14 +89,16 @@ def process_entry(elem):
                             if descriptionchild.tag == "{http://d-nb.info/standards/elementset/gnd#}preferredName" and descriptionchild.text is not None:
                                 creator_count += 1
                             else:
-                                crazy_creator = True
+                                crazy_creator = "No Text in Tag"
                     else:
-                        crazy_creator = True
+                        crazy_creator = "No DescriptionTag"
                     if crazy_creator:
-                        print("\n\nCRAZY CREATOR\n\n")
+                        print("\nError in creator: " + crazy_creator)
+                        print("Line: " + str(elem.sourceline) + " \n")
     if title_count > 0 and creator_count > 0:
         if title_count > 1:
-            print("\n\nCRAZY TITLE\n\n")
+            print("\nMore than one title")
+            print("Line: " + str(elem.sourceline) + " \n")
             drop_elem()
             return None
         entries = []
