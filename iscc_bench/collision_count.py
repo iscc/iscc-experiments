@@ -1,11 +1,13 @@
-# -*- coding: utf-8 -*-
+
 import time
+
 from iscclib.meta import MetaID
 import re
 from iscc_bench.readers.bxbooks import bxbooks
+from iscc_bench.readers.dnbrdf import iter_isbns
 
 
-def count_collisions_csv(reader=bxbooks, skip=0):
+def count_collisions(reader=iter_isbns(), skip=0):
     start_time = time.time()
     collisions = dict()
     duplicates = 0
@@ -83,3 +85,7 @@ def different_author(author_one, author_two):
             return False
 
     return True
+
+
+if __name__ == '__main__':
+    count_collisions()
