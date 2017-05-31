@@ -7,7 +7,7 @@ from iscc_bench.readers.bxbooks import bxbooks
 from iscc_bench.readers.dnbrdf import iter_isbns
 
 
-def count_collisions(reader=iter_isbns(), skip=0):
+def count_collisions(reader=iter_isbns, skip=0):
     start_time = time.time()
     collisions = dict()
     duplicates = 0
