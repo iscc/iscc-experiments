@@ -44,7 +44,7 @@ def fast_iter(context, func, *args, **kwargs):
     entries = []
     last_parent = None
     for event, elem in context:
-        if counter >= 1000:
+        if counter >= 10000:
             break
         if last_parent == elem.getparent():  # we iter over two tags so sometimes we visit the sam parent more than one time
             continue
@@ -55,11 +55,11 @@ def fast_iter(context, func, *args, **kwargs):
         function_entries = func(elem.getparent(), *args, **kwargs)
         if function_entries is not None:
             for entry in function_entries:
-                entries.append(MetaData(
-                    isbn=entry["isbn"],
-                    title=entry["title"],
-                    author=entry["author"]
-                ))
+                yield MetaData(
+                    isbn=str(entry["isbn"]),
+                    title=str(entry["title"]),
+                    author=str(entry["author"])
+                )
         # It's safe to call clear() here because no descendants will be
         # accessed
         elem.clear()
