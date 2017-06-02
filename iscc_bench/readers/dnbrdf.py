@@ -6,15 +6,11 @@ import time
 
 import isbnlib
 from iscc_bench import DATA_DIR, MetaData
-from collections import namedtuple
 from lxml import etree
 
 DNB_TITLES = os.path.join(DATA_DIR, 'DNBtitel.rdf')
 
-BaseTitle = namedtuple('Title', 'title subtitle authors')
-
 dropped = 0
-
 
 def init_dropped():
     global dropped
@@ -26,28 +22,33 @@ def drop_elem():
     dropped += 1
 
 
-class Title(BaseTitle):
-    pass
-
-
 def fast_iter(context, func, *args, **kwargs):
     """Save memory while iterating"""
     counter = 0
     init_dropped()
     start_time = time.time()
-    entries = []
     last_parent = None
     for event, elem in context:
         if counter >= 100000:
             break
-        if last_parent == elem.getparent():  # we iter over two tags so sometimes we visit the sam parent more than one time
+        if last_parent == elem.getparent():  # we iter over two tags so sometimes we visit the same parent more than one time
             continue
         else:
             counter += 1
             last_parent = elem.getparent()
         if counter % 1000 == 0:
-            print(str(counter))
+            print(counter)
 
+        counters = count_creator_and_title(elem.getparent())
+        if counters["title"] > 0 and counters["creator"] > 0:
+            if counters["title"] > 1:
+                print("\nMore than one title")
+                print("Line: " + str(elem.sourceline) + " \n")
+                drop_elem()
+                continue
+        else:
+            drop_elem()
+            continue
         function_entries = func(elem.getparent(), *args, **kwargs)
         if function_entries is not None:
             for entry in function_entries:
@@ -68,10 +69,9 @@ def fast_iter(context, func, *args, **kwargs):
     print("Dropped: " + str(dropped))
     print("Zeit: " + str(end_time - start_time))
     del context
-    return entries
 
 
-def process_entry(elem):
+def count_creator_and_title(elem):
     title_count = 0
     creator_count = 0
     for child in elem.iterchildren():
@@ -81,7 +81,7 @@ def process_entry(elem):
             resource = child.attrib.get('{http://www.w3.org/1999/02/22-rdf-syntax-ns#}resource')
             if resource is not None:
                 creator_count += 1
-            else:
+            else:  # todo: authorList
                 crazy_creator = False
                 for creatorchild in child.iterchildren():
                     if creatorchild.tag == "{http://www.w3.org/1999/02/22-rdf-syntax-ns#}Description":
@@ -95,12 +95,14 @@ def process_entry(elem):
                     if crazy_creator:
                         print("\nError in creator: " + crazy_creator)
                         print("Line: " + str(elem.sourceline) + " \n")
-    if title_count > 0 and creator_count > 0:
-        if title_count > 1:
-            print("\nMore than one title")
-            print("Line: " + str(elem.sourceline) + " \n")
-            drop_elem()
-            return None
+        if child.tag == "{http://purl.org/ontology/bibo/}authorList":
+            print ("authorList")
+    return {
+        "creator": creator_count,
+        "title": title_count
+    }
+
+def process_entry(elem):
         entries = []
         titles = []
         creators = []
@@ -142,12 +144,10 @@ def process_entry(elem):
         else:
             drop_elem()
             return None
-    else:
-        drop_elem()
-        return None
 
 
 def iter_isbns():
+
     context = etree.iterparse(
         DNB_TITLES,
         tag=("{http://purl.org/ontology/bibo/}isbn10", "{http://purl.org/ontology/bibo/}isbn13"),
