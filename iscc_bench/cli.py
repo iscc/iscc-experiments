@@ -1,5 +1,6 @@
 import click
 from .collision_count import count_collisions
+from .new_index import new_index
 
 
 @click.group()
@@ -15,3 +16,12 @@ def check_meta_collisions(reader, skip):
     count_collisions()
 
 main.add_command(check_meta_collisions)
+
+@click.command()
+def new_index():
+    """Delete old Index and add new."""
+    ok = input("Really delete old index?", default="no")
+    if ok.lower() == "yes" or ok.lower() == "y":
+        new_index()
+
+main.add_command(new_index)

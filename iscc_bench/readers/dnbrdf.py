@@ -1,14 +1,21 @@
 # -*- coding: utf-8 -*-
 import operator
 import os
-
 import time
+import pickle
 
 import isbnlib
 from iscc_bench import DATA_DIR, MetaData
 from lxml import etree
 
+from elasticsearch import Elasticsearch
+from elasticsearch import helpers
+es = Elasticsearch()
+
 DNB_TITLES = os.path.join(DATA_DIR, 'DNBtitel.rdf')
+
+creators_gnd_file = os.path.join(DATA_DIR, 'gnd.pickle')
+creators_gnd = pickle.load(open(creators_gnd_file, 'rb'))
 
 dropped = 0
 
@@ -26,11 +33,13 @@ def fast_iter(context, func, *args, **kwargs):
     """Save memory while iterating"""
     counter = 0
     init_dropped()
+    entries = []
     start_time = time.time()
     last_parent = None
     for event, elem in context:
-        if counter >= 100000:
-            break
+        if len(entries) >= 50: #how many entries are in one bulk request
+            send_bulk_request(entries, "dnb_rdf")
+            entries = []
         if last_parent == elem.getparent():  # we iter over two tags so sometimes we visit the same parent more than one time
             continue
         else:
@@ -52,11 +61,11 @@ def fast_iter(context, func, *args, **kwargs):
         function_entries = func(elem.getparent(), *args, **kwargs)
         if function_entries is not None:
             for entry in function_entries:
-                yield MetaData(
+                entries.append(MetaData(
                     isbn=str(entry["isbn"]),
                     title=str(entry["title"]),
                     author=str(entry["author"])
-                )
+                ))
         # It's safe to call clear() here because no descendants will be
         # accessed
         elem.clear()
@@ -81,7 +90,7 @@ def count_creator_and_title(elem):
             resource = child.attrib.get('{http://www.w3.org/1999/02/22-rdf-syntax-ns#}resource')
             if resource is not None:
                 creator_count += 1
-            else:  # todo: authorList
+            else:
                 crazy_creator = False
                 for creatorchild in child.iterchildren():
                     if creatorchild.tag == "{http://www.w3.org/1999/02/22-rdf-syntax-ns#}Description":
@@ -102,6 +111,17 @@ def count_creator_and_title(elem):
         "title": title_count
     }
 
+def send_bulk_request(entries, src):
+    actions = [
+        {
+            "_index": "iscc_meta",
+            "_type": "default",
+            "_source": {"isbn": entry.isbn, "title": entry.title, "creator": entry.author, "source": src}
+        }
+        for entry in entries
+    ]
+    helpers.bulk(es, actions)
+
 def process_entry(elem):
         entries = []
         titles = []
@@ -114,7 +134,9 @@ def process_entry(elem):
             if child.tag == "{http://purl.org/dc/terms/}creator":
                 resource = child.attrib.get('{http://www.w3.org/1999/02/22-rdf-syntax-ns#}resource')
                 if resource is not None:
-                    creators.append(child.attrib.get('{http://www.w3.org/1999/02/22-rdf-syntax-ns#}resource'))
+                    creator_id = str(resource).split('http://d-nb.info/gnd/')[1]
+                    creator = creators_gnd[creator_id]
+                    creators.append(creator)
                 else:
                     for creatorchild in child.iterchildren():
                         if creatorchild.tag == "{http://www.w3.org/1999/02/22-rdf-syntax-ns#}Description":
@@ -147,7 +169,6 @@ def process_entry(elem):
 
 
 def iter_isbns():
-
     context = etree.iterparse(
         DNB_TITLES,
         tag=("{http://purl.org/ontology/bibo/}isbn10", "{http://purl.org/ontology/bibo/}isbn13"),
