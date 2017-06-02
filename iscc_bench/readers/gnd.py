@@ -1,11 +1,14 @@
 # -*- coding: utf-8 -*-
 import os
 import time
+import pickle
 
 from iscc_bench import DATA_DIR
 from lxml import etree
 
+
 GND = os.path.join(DATA_DIR, 'GND.rdf')
+PICKLE = os.path.join(DATA_DIR, 'gnd.pickle')
 dropped = 0
 
 
@@ -44,10 +47,10 @@ def fast_iter(context):
             print(counter)
         counter += 1
 
-        creator_id = \
-        str(elem.attrib.get("{http://www.w3.org/1999/02/22-rdf-syntax-ns#}about")).split('http://d-nb.info/gnd/')[1]
-
-        creators[creator_id] = name
+        if name:
+            creator_id = \
+                str(elem.attrib.get("{http://www.w3.org/1999/02/22-rdf-syntax-ns#}about")).split('http://d-nb.info/gnd/')[1]
+            creators[creator_id] = name
 
         # It's safe to call clear() here because no descendants will be
         # accessed
@@ -57,9 +60,8 @@ def fast_iter(context):
             while ancestor.getprevious() is not None:
                 del ancestor.getparent()[0]
     end_time = time.time()
-    print(creators["1218955-8"])
-    print(creators["1218910-8"])
-    print(creators["132071-3"])
+    with open(PICKLE, 'wb') as f:
+        pickle.dump(creators, f, pickle.HIGHEST_PROTOCOL)
     print("Dropped: {}".format(dropped))
     print("Same: {}".format(same))
     print("Zeit: {}".format(end_time - start_time))
