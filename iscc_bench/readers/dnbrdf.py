@@ -26,7 +26,7 @@ def iter_isbns():
         # huge_tree=True
     )
     parent = None
-    #loop over every isbn10 or isbn13 element
+    # loop over every isbn10 or isbn13 element
     for event, elem in context:
         if parent == elem.getparent():  # we iter over two tags so sometimes we visit the same parent more than one time
             continue
@@ -46,43 +46,43 @@ def iter_isbns():
 
 
 def process_entry(elem):
-        titles = []
-        creators = []
-        isbns = []
-        for child in elem.iterchildren():
-            # get title
-            if child.tag == "{http://purl.org/dc/elements/1.1/}title":
-                titles.append(child.text)
-            # get creators
-            if child.tag == "{http://purl.org/dc/terms/}creator":
-                resource = child.attrib.get('{http://www.w3.org/1999/02/22-rdf-syntax-ns#}resource')
-                if resource is not None:
-                    creator_id = str(resource).split('http://d-nb.info/gnd/')[1]
-                    if creators_gnd[creator_id] is not None:
-                        creators.append(creators_gnd[creator_id])
-                else:
-                    for description_tag in child.iterchildren():
-                        if description_tag.tag == "{http://www.w3.org/1999/02/22-rdf-syntax-ns#}Description":
-                            for creator_tag in description_tag.iterchildren():
-                                if creator_tag.tag == "{http://d-nb.info/standards/elementset/gnd#}preferredName":
-                                    creators.append(creator_tag.text)
-                                else:
-                                    log.info('No Text in Creator Tag: Line {}'.format(description_tag.sourceline))
-                        else:
-                            log.info('No description Tag in Creator: Line {}'.format(description_tag.sourceline))
-            # get isbns
-            if child.tag == "{http://purl.org/ontology/bibo/}isbn10" and child.text is not None:
-                isbns.append(isbnlib.to_isbn13(child.text))
-            if child.tag == "{http://purl.org/ontology/bibo/}isbn13" and child.text is not None:
-                isbns.append(child.text)
-        if len(titles) == 1 and len(creators) > 0:  # we need a title and a creator
-            # add one entry for every different isbn
-            for isbn in list(set(isbns)):
-                if isbn is not None:
-                    yield MetaData(isbn, ", ".join(titles), ", ".join(creators))
-        else:
-            if len(titles) > 1:
-                log.info('More than one title: Line {}'.format(elem.sourceline))
+    titles = []
+    creators = []
+    isbns = []
+    for child in elem.iterchildren():
+        # get title
+        if child.tag == "{http://purl.org/dc/elements/1.1/}title":
+            titles.append(child.text)
+        # get creators
+        if child.tag == "{http://purl.org/dc/terms/}creator":
+            resource = child.attrib.get('{http://www.w3.org/1999/02/22-rdf-syntax-ns#}resource')
+            if resource is not None:
+                creator_id = str(resource).split('http://d-nb.info/gnd/')[1]
+                if creators_gnd[creator_id] is not None:
+                    creators.append(creators_gnd[creator_id])
+            else:
+                for description_tag in child.iterchildren():
+                    if description_tag.tag == "{http://www.w3.org/1999/02/22-rdf-syntax-ns#}Description":
+                        for creator_tag in description_tag.iterchildren():
+                            if creator_tag.tag == "{http://d-nb.info/standards/elementset/gnd#}preferredName" and creator_tag.text is not None:
+                                creators.append(creator_tag.text)
+                            else:
+                                log.info('No Text in Creator Tag: Line {}'.format(description_tag.sourceline))
+                    else:
+                        log.info('No description Tag in Creator: Line {}'.format(description_tag.sourceline))
+        # get isbns
+        if child.tag == "{http://purl.org/ontology/bibo/}isbn10" and child.text is not None:
+            isbns.append(isbnlib.to_isbn13(child.text))
+        if child.tag == "{http://purl.org/ontology/bibo/}isbn13" and child.text is not None:
+            isbns.append(child.text)
+    if len(titles) == 1 and len(creators) > 0:  # we need a title and a creator
+        # add one entry for every different isbn
+        for isbn in list(set(isbns)):
+            if isbn is not None:
+                yield MetaData(isbn, ", ".join(titles), ", ".join(creators))
+    else:
+        if len(titles) > 1:
+            log.info('More than one title: Line {}'.format(elem.sourceline))
 
 
 if __name__ == "__main__":

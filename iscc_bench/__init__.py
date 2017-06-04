@@ -16,7 +16,7 @@ class MetaData(MetaDataBase):
     @property
     def key(self):
         """The primary key of the metadata"""
-        return sha1(''.join(list(self)).encode('utf-8')).hexdigest()
+        return sha1(''.join([self.title, self.author]).encode('utf-8')).hexdigest()
 
 
 if __name__ == '__main__':
