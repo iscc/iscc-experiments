@@ -1,6 +1,6 @@
 # ISCC Benchmarks
 
-We use the `iscclib.benchmarks` package for automated testing of accuracy and performance of the different ISCC components.
+We use the `iscc_bench` package for automated testing of accuracy and performance of the different ISCC components.
 
 ## MetaID Benchmark
 
@@ -49,4 +49,3 @@ All datasets with at least ISBN, Title, Creators fields qualify for MetaID testi
 | Google Books | 3 M       | XML                      | https://www.lib.msu.edu/gds/             |
 | BX Books     | 271.379   | CSV                      | http://www2.informatik.uni-freiburg.de/~cziegler/BX/ |
 | DBLP Dataset | 50.000    | XML                      | https://hpi.de/naumann/projects/repeatability/datasets/dblp-dataset.html |
-
