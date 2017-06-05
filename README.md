@@ -42,6 +42,7 @@ All datasets with at least ISBN, Title, Creators fields qualify for MetaID testi
 
 | Name         | # Records | Format                   | Url                                      |
 | ------------ | --------- | ------------------------ | ---------------------------------------- |
+| Open Library |           | TSV, JWON                | https://openlibrary.org/developers/dumps |
 | EU Library   | 109 M     | Dublin Core, Rdf, Turtle | http://www.theeuropeanlibrary.org/tel4/access/data/opendata/details |
 | DNB Titel    | 14 M      | JSON-LD, RDF, TURTLE     | http://datendienst.dnb.de/cgi-bin/mabit.pl?userID=opendata&pass=opendata&cmd=login |
 | Harvard      | 12 M      | MARC21                   | http://library.harvard.edu/open-metadata |
