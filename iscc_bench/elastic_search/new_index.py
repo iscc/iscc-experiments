@@ -10,24 +10,24 @@ mapping_data = '''
       "dynamic": "strict",
       "properties": {
         "isbn": {
-          "type": "string",
-          "index": "not_analyzed"
+          "type": "keyword",
+          "index": "true"
         },
         "title": {
-          "type": "string",
-          "index": "not_analyzed"
+          "type": "keyword",
+          "index": "true"
         },
         "creator": {
-          "type": "string",
-          "index": "not_analyzed"
+          "type": "keyword",
+          "index": "true"
         },
         "source": {
-          "type": "string",
-          "index": "not_analyzed"
+          "type": "keyword",
+          "index": "true"
         },
         "meta_id": {
-          "type": "string",
-          "index": "not_analyzed"
+          "type": "keyword",
+          "index": "true"
         }
       }
     }
@@ -41,12 +41,12 @@ mapping_id = '''
       "dynamic": "strict",
       "properties": {
         "meta_id": {
-          "type": "string",
-          "index": "not_analyzed"
+          "type": "keyword",
+          "index": "true"
         },
         "meta_data": {
-          "type": "string",
-          "index": "not_analyzed"
+          "type": "keyword",
+          "index": "true"
         }
       }
     }
