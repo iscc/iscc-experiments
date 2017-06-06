@@ -4,10 +4,10 @@ import time
 from iscclib.meta import MetaID
 import re
 from iscc_bench.readers.bxbooks import bxbooks
-from iscc_bench.readers.dnbrdf import iter_isbns
+from iscc_bench.readers.dnbrdf import dnbrdf
 
 
-def count_collisions(reader=iter_isbns, skip=0):
+def count_collisions(reader=dnbrdf, skip=0):
     start_time = time.time()
     collisions = dict()
     duplicates = 0

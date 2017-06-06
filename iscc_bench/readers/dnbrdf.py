@@ -14,7 +14,7 @@ creators_gnd = pickle.load(open(creators_gnd_file, 'rb'))
 log = logging.getLogger(__name__)
 
 
-def iter_isbns():
+def dnbrdf():
     """Iter over isbn tags and save memory while iterating"""
     context = etree.iterparse(
         DNB_TITLES,
@@ -86,4 +86,4 @@ def process_entry(elem):
 
 
 if __name__ == "__main__":
-    iter_isbns()
+    dnbrdf()
