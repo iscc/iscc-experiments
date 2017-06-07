@@ -47,8 +47,8 @@ def openlibrary(path=DATA_FILE):
     :return: Generator[:class:`MetaData`] (filtered for records that have ISBNs)
     """
 
+    skipped = 0
     authors = get_or_build_author_index(INDEX_FILE_AUTHORS)
-
     get_author_name = lambda ar: authors.get(ar['key'].split('/')[-1], '').strip()
 
     for line in iter_gz_lines(path, filter='isbn'):
@@ -58,15 +58,24 @@ def openlibrary(path=DATA_FILE):
             try:
                 title = data['title']
             except KeyError:
-                log.debug('No title: {}'.format(data))
+                log.debug('Skip entry (no title): {}'.format(data))
+                skipped += 1
                 continue
 
             author = ';'.join([get_author_name(ar) for ar in data.get('authors', [])])
 
+            if not author.strip():
+                log.debug('Skip entry (no author): {}'.format(data))
+                skipped += 1
+                continue
+
             for isbn in raw_isbns:
                 if not isbnlib.notisbn(isbn):
                     isbn13 = isbnlib.to_isbn13(isbn)
-                    yield MetaData(isbn13, title, author)
+                    meta = MetaData(isbn13, title, author)
+                    yield meta
+
+    log.info('Openlibrary skipped {} entries.'.format(skipped))
 
 
 def get_or_build_author_index(index_file=INDEX_FILE_AUTHORS):
@@ -106,7 +115,7 @@ def index_authors(data_file=DATA_FILE_AUTHORS, index_file=INDEX_FILE_AUTHORS):
             log.debug('No author name: {}'.format(data))
             continue
 
-        authors_idx[key] = author_name
+        authors_idx[key] = author_name.strip()
 
         indexed += 1
         if not indexed % 1000000:
@@ -145,4 +154,4 @@ if __name__ == '__main__':
     logging.basicConfig(level=logging.DEBUG, format=log_format)
 
     for md in openlibrary():
-        print(md.key, md)
+        pass
