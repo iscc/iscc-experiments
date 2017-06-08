@@ -53,10 +53,12 @@ mapping_id = '''
   }
 }'''
 
-def new_index():
+def new_data_index():
     if es.indices.exists(index='iscc_meta_data'):
         es.indices.delete(index='iscc_meta_data')
     es.indices.create(index='iscc_meta_data', body=mapping_data)
+
+def new_id_index():
     if es.indices.exists(index='iscc_meta_id'):
         es.indices.delete(index='iscc_meta_id')
     es.indices.create(index='iscc_meta_id', body=mapping_id)

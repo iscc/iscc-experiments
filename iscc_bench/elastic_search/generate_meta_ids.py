@@ -7,10 +7,10 @@ from elasticsearch import helpers
 
 es = Elasticsearch()
 
-def action_generator():
+def action_generator(id_bits):
     for data in helpers.scan(es, index='iscc_meta_data', query={"query": {"match_all": {}}}):
         mid = MetaID.from_meta(
-            data['_source']['title'], data['_source']['creator']
+            data['_source']['title'], data['_source']['creator'], bits=id_bits
         )
         query = {
             "_index": "iscc_meta_id",
@@ -20,16 +20,18 @@ def action_generator():
         }
         yield query
 
-start_time = time.time()
-success = 0
-failed = 0
-for ok, item in helpers.streaming_bulk(es, action_generator(), chunk_size=50000):
-    if ok:
-        success += 1
-    else:
-        failed += 1
+def generate_ids(id_bits):
+    success = 0
+    failed = 0
+    for ok, item in helpers.streaming_bulk(es, action_generator(id_bits), chunk_size=50000):
+        if ok:
+            success += 1
+        else:
+            failed += 1
 
-print('Successful: {}'.format(success))
-print('Failed: {}'.format(failed))
-print("Time: {}".format(time.time() - start_time))
+    print('Successful: {}'.format(success))
+    print('Failed: {}'.format(failed))
 
+
+if __name__ == '__main__':
+    generate_ids(64)

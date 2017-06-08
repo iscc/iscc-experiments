@@ -157,9 +157,14 @@ def negatives():
         collision_file.write('\n'.join(collision_objects))
 
 
-if __name__ == '__main__':
+def evaluate():
     entry_groups()
     print('\n')
     positives()
     print('\n')
     negatives()
+
+
+
+if __name__ == '__main__':
+    evaluate()
