@@ -21,7 +21,15 @@ def action_generator():
         yield query
 
 start_time = time.time()
-for item in helpers.streaming_bulk(es, action_generator(), chunk_size=1000):
-    print(item)
+success = 0
+failed = 0
+for ok, item in helpers.streaming_bulk(es, action_generator(), chunk_size=50000):
+    if ok:
+        success += 1
+    else:
+        failed += 1
+
+print('Successful: {}'.format(success))
+print('Failed: {}'.format(failed))
 print("Time: {}".format(time.time() - start_time))
 

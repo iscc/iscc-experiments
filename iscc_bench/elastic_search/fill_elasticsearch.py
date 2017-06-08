@@ -18,8 +18,15 @@ def action_generator():
             }
 
 def populate_elastic():
-    for item in helpers.streaming_bulk(es, action_generator(), chunk_size=1000):
-        print(item)
+    success = 0
+    failed = 0
+    for ok, item in helpers.streaming_bulk(es, action_generator(), chunk_size=10000):
+        if ok:
+            success += 1
+        else:
+            failed += 1
+    print('Successful: {}'.format(success))
+    print('Failed: {}'.format(failed))
 
 if __name__ == '__main__':
     populate_elastic()
