@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+import json
 import os
 
 from elasticsearch import Elasticsearch
@@ -84,14 +85,22 @@ def get_meta_ids(isbn):
         yield meta_id_entries['_source']
 
 
-def entry_groups():
-    print('{} entries'.format(total['count']))
+def entry_groups(id):
     res = es.search('iscc_meta_data', body=group_by_source, request_timeout=60)
+    sources = {}
     for bucket in res['aggregations']['group_by_state']['buckets']:
-        print('%s entries from %s' % (bucket['doc_count'], bucket['key']))
+        sources[bucket['key']] = bucket['doc_count']
+
+    results = {
+        "doc": {
+            "total": total['count'],
+            "entry_sources": json.dumps(sources)
+        }
+    }
+    es.update(index='iscc_result', id=id, doc_type="default", body=results)
 
 
-def positives():
+def positives(id):
     res = es.search('iscc_meta_id', body=group_by_meta_id, request_timeout=60)
     buckets = res['aggregations']['group_by_state']['buckets']
 
@@ -114,17 +123,20 @@ def positives():
                 collision_objects.append(bucket['key'])
             else:
                 all_same += 1
-    print('{} Groups of Meta-IDs with more than one Entry'.format(all_same + one_diff))
-    print('{} Groups had the same ISBN'.format(all_same))
-    print('{} Groups had minimum one different ISBN'.format(one_diff))
-    print('Groups had on average %s entrys and %s different ISBN' % (
-    round(total_entries / (all_same + one_diff), 2), round(total_subgroups / (all_same + one_diff), 2)))
 
     with open(COLLISION_MID, 'w') as collision_file:
         collision_file.write('\n'.join(collision_objects))
 
+    results = {
+        "doc": {
+            "mid_groups": all_same + one_diff,
+            "same_isbn": all_same,
+        }
+    }
+    es.update(index='iscc_result', id=id, doc_type="default", body=results)
 
-def negatives():
+
+def negatives(id):
     res = es.search('iscc_meta_data', body=group_by_isbn, request_timeout=60)
     buckets = res['aggregations']['group_by_state']['buckets']
 
@@ -147,23 +159,33 @@ def negatives():
                 collision_objects.append(bucket['key'])
             else:
                 all_same += 1
-    print('{} Groups of ISBNs with more than one Entry'.format(all_same + one_diff))
-    print('{} Groups had the same Meta-ID'.format(all_same))
-    print('{} Groups had minimum one different Meta-ID'.format(one_diff))
-    print('Groups had on average %s entrys and %s different Meta-IDs' % (
-    round(total_entries / (all_same + one_diff), 2), round(total_subgroups / (all_same + one_diff), 2)))
+
+    results = {
+        "doc": {
+            "isbn_groups": all_same + one_diff,
+            "same_mid": all_same
+        }
+    }
+    es.update(index='iscc_result', id=id, doc_type="default", body=results)
 
     with open(COLLISION_ISBN, 'w') as collision_file:
         collision_file.write('\n'.join(collision_objects))
 
 
 def evaluate():
-    entry_groups()
-    print('\n')
-    positives()
-    print('\n')
-    negatives()
+    no_total_query = '{"query": {"bool": {"must_not": {"exists": {"field": "total"}}}}}'
+    empty_results = es.search(index='iscc_result', body=no_total_query)['hits']['hits']
+    if len(empty_results) > 0:
+        id = empty_results[0]['_id']
+        entry_groups(id)
+        positives(id)
+        negatives(id)
+    else:
+        print('ID´s already tested.')
 
+
+def get_results():
+    pass
 
 
 if __name__ == '__main__':
