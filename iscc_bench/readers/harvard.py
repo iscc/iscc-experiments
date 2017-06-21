@@ -27,20 +27,22 @@ HARVARD_DATA = os.path.join(DATA_DIR, 'harvard')
 
 
 def harvard(path=HARVARD_DATA):
-    """Return a generator that iterates over all harvard records that have ISBN data.
+    """Return a generator that iterates over all harvard records with complete metadata.
 
     :param str path: path to directory with harvard .mrc files
     :return: Generator[:class:`MetaData`] (filtered for records that have ISBNs)
     """
 
     for meta in marc21_dir_reader(path):
-        if meta.isbn and not isbnlib.notisbn(meta.isbn):
-
+        if all((meta.isbn, meta.title, meta.author)) and not isbnlib.notisbn(meta.isbn):
             # Basic cleanup
-            isbn = isbnlib.to_isbn13(meta.isbn)
-            title = meta.title.strip('/').strip()
-            author = meta.author or ''
-            cleaned = MetaData(isbn, title, author)
+            try:
+                isbn = isbnlib.to_isbn13(meta.isbn)
+                title = meta.title.strip('/').strip()
+                cleaned = MetaData(isbn, title, meta.author)
+            except Exception:
+                log.exception('Error parsing data')
+                continue
 
             log.debug(cleaned)
             yield cleaned
@@ -72,10 +74,17 @@ def marc21_file_reader(file_path):
 
     with open(file_path, 'rb') as mf:
 
-        reader = MARCReader(mf, force_utf8=True, utf8_handling='replace')
+        reader = MARCReader(mf, utf8_handling='ignore')
 
-        for record in reader:
-            yield MetaData(record.isbn(), record.title(), record.author())
+        while True:
+            try:
+                record = next(reader)
+                yield MetaData(record.isbn(), record.title(), record.author())
+            except UnicodeDecodeError as e:
+                log.error(e)
+                continue
+            except StopIteration:
+                break
 
 
 if __name__ == '__main__':
@@ -83,6 +92,6 @@ if __name__ == '__main__':
 
     logging.basicConfig(level=logging.DEBUG)
 
-    for entry in harvard():
+    for no, entry in enumerate(harvard()):
         # Do something with entry (MetaData object)
-        pass
+        print(no)
