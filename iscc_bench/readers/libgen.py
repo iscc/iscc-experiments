@@ -25,7 +25,7 @@ LIBGEN_DATA = os.path.join(DATA_DIR, 'libgen_content.csv')
 
 def libgen(path=LIBGEN_DATA):
 
-    with open(LIBGEN_DATA, 'r', encoding='utf-8') as infile:
+    with open(path, 'r', encoding='utf-8') as infile:
         reader = csv.reader(infile, delimiter=',')
         for row in reader:
 
