@@ -150,8 +150,8 @@ def count_records():
 
 
 if __name__ == '__main__':
-    log_format = '%(asctime)s - %(levelname)s - %(message)s'
-    logging.basicConfig(level=logging.DEBUG, format=log_format)
+    # log_format = '%(asctime)s - %(levelname)s - %(message)s'
+    # logging.basicConfig(level=logging.DEBUG, format=log_format)
 
     for md in openlibrary():
-        pass
+        print(md)

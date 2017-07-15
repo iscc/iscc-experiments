@@ -90,8 +90,8 @@ def marc21_file_reader(file_path):
 if __name__ == '__main__':
     """Demo usage."""
 
-    logging.basicConfig(level=logging.DEBUG)
+    # logging.basicConfig(level=logging.DEBUG)
 
-    for no, entry in enumerate(harvard()):
+    for entry in harvard():
         # Do something with entry (MetaData object)
-        print(no)
+        print(entry)
