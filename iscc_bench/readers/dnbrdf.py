@@ -92,7 +92,7 @@ def process_entry(elem, authors):
             resource = child.attrib.get('{http://www.w3.org/1999/02/22-rdf-syntax-ns#}resource')
             if resource is not None:
                 creator_id = str(resource).split('http://d-nb.info/gnd/')[1]
-                if authors[creator_id] is not None:
+                if authors.get(creator_id) is not None:
                     creators.append(authors[creator_id])
             else:
                 for description_tag in child.iterchildren():
@@ -188,5 +188,5 @@ if __name__ == "__main__":
     logging.basicConfig(level=logging.INFO, format=log_format)
 
     for md in dnbrdf():
-        pass
+        print(md)
 
