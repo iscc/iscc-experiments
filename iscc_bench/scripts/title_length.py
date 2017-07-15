@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Script to measure title length statisics"""
+"""Script to measure basic title length statisics"""
 import unicodedata
 from itertools import cycle
 import numpy as np
@@ -24,7 +24,7 @@ def reject_outliers(data, m=2.):
 
 if __name__ == '__main__':
 
-    SAMPLE_SIZE = 100000
+    SAMPLE_SIZE = 10000
 
     title_sizes = []
     title_sizes_bytes = []
