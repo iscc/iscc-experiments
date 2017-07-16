@@ -10,7 +10,7 @@ from typing import List, ByteString, Sequence
 NGRAM_SIZE = 4
 
 SPLIT_MIN_ALGO = True
-SPLIT_MIN_LOWEST = 6
+SPLIT_MIN_LOWEST = 4
 
 
 INPUT_TRIM_TITLE = 128
@@ -194,8 +194,10 @@ def hamming_distance(code1: str, code2: str) -> int:
 
 if __name__ == '__main__':
     import os
+    import time
     import statistics
     from iscc_bench import DATA_DIR
+    from iscclib import MetaID
 
     def iter_pairs():
         fp = os.path.join(DATA_DIR, 'metapairs_10000.sample')
@@ -203,9 +205,35 @@ if __name__ == '__main__':
             for line in sample_file:
                 yield tuple(line.strip('\n').split('|')[1:])
 
+
+    print('Running Algo 1')
     hamming_distances = []
     true_positives = 0
     total = 0
+
+    start = time.time()
+    for row in iter_pairs():
+        mid1 = MetaID.from_meta(row[0], row[1])
+        mid2 = MetaID.from_meta(row[2], row[3])
+        hd = mid1.hamming_distance(mid2)
+        total += 1
+        hamming_distances.append(hd)
+        if mid1 == mid2:
+            true_positives += 1
+        # print(mid1, mid2, hd, '\t', row)
+    end = time.time()
+
+    print('Execution Time %s' % (end - start))
+    print('Max Hamming Distance %s' % max(hamming_distances))
+    print('Mean Hamming Distance %s' % statistics.mean(hamming_distances))
+    print('True Positives {} out of {}  ({}%)'.format(true_positives, total, true_positives / total * 100))
+    print()
+
+    print('Running Algo 2')
+    hamming_distances = []
+    true_positives = 0
+    total = 0
+    start = time.time()
     for row in iter_pairs():
         mid1 = generate_meta_id(row[0], row[1])
         mid2 = generate_meta_id(row[2], row[3])
@@ -214,9 +242,10 @@ if __name__ == '__main__':
         hamming_distances.append(hd)
         if mid1 == mid2:
             true_positives += 1
-        else:
-            print(mid1, mid2, hd, '\t', row)
+        # print(mid1, mid2, hd, '\t', row)
+    end = time.time()
 
+    print('Execution Time %s' % (end - start))
     print('Max Hamming Distance %s' % max(hamming_distances))
     print('Mean Hamming Distance %s' % statistics.mean(hamming_distances))
     print('True Positives {} out of {}  ({}%)'.format(true_positives, total, true_positives/total * 100))
