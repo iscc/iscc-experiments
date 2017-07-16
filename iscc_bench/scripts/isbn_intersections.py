@@ -67,7 +67,7 @@ def get_intersecting_isbns():
     return set.intersection(*isbn_sets)
 
 
-def build_metadata_pairs(samples=100000):
+def build_metadata_pairs(samples=1000000):
     """
     Build sample data in format:
         isbn, title_a, authors_a, title_b, authors_b
@@ -138,7 +138,7 @@ def build_metadata_pairs(samples=100000):
 
 if __name__ == '__main__':
     dump_isbns()
-    print_isbn_stats()
-    print('Total all intersecting isbns: {}'.format(len(get_intersecting_isbns())))
-    print_data_source_intersections()
-    # build_metadata_pairs()
+    # print_isbn_stats()
+    # print('Total all intersecting isbns: {}'.format(len(get_intersecting_isbns())))
+    # print_data_source_intersections()
+    build_metadata_pairs()
