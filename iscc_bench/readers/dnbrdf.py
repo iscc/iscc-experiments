@@ -113,12 +113,13 @@ def process_entry(elem, authors):
         # add one entry for every different isbn
         for isbn in list(set(isbns)):
             if isbn is not None:
+                title = titles[0].split(' : ')[0]
                 meta = MetaData(isbn, titles[0], ";".join(creators))
                 log.debug(meta)
                 yield meta
     else:
         if len(titles) > 1:
-            log.warning('More than one title: Line {}'.format(elem.sourceline))
+            log.info('More than one title: Line {}'.format(elem.sourceline))
 
 
 def index_authors(data_file=DATA_FILE_AUTHORS, index_file=INDEX_FILE_AUTHORS):

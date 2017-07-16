@@ -24,12 +24,12 @@ def bxbooks(path=BXBOOKS_DATA):
         for row in reader:
 
             if isbnlib.notisbn(row['ISBN']):
-                log.warning('Skip row with invalid ISBN {}'.format(row['ISBN']))
+                log.info('Skip row with invalid ISBN {}'.format(row['ISBN']))
                 continue
 
             yield MetaData(
                 isbn=isbnlib.to_isbn13(row['ISBN']),
-                title=row['Book-Title'],
+                title=row['Book-Title'].split(' : ')[0],
                 author=row['Book-Author']
             )
 

@@ -32,9 +32,10 @@ def libgen(path=LIBGEN_DATA):
             title, creators, isbns = row[1].strip(), row[5].strip(), row[16].strip()
 
             if not all((title, creators, isbns)):
-                log.warning('Skip incomplete record {}'.format(row[0]))
+                log.info('Skip incomplete record {}'.format(row[0]))
                 continue
 
+            title = title.split(' : ')[0]
             creators = ';'.join(creators.split(','))
 
             for s in isbns.split(','):

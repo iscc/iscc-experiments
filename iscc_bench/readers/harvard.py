@@ -38,7 +38,7 @@ def harvard(path=HARVARD_DATA):
             # Basic cleanup
             try:
                 isbn = isbnlib.to_isbn13(meta.isbn)
-                title = meta.title.strip('/').strip()
+                title = meta.title.strip('/').strip().split(' : ')[0]
                 cleaned = MetaData(isbn, title, meta.author)
             except Exception:
                 log.exception('Error parsing data')

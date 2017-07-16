@@ -56,7 +56,7 @@ def openlibrary(path=DATA_FILE):
         raw_isbns = data.get('isbn_13') or data.get('isbn_10')
         if raw_isbns:
             try:
-                title = data['title']
+                title = data['title'].split(' : ')[0]
             except KeyError:
                 log.debug('Skip entry (no title): {}'.format(data))
                 skipped += 1
