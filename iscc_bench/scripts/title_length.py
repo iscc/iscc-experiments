@@ -22,9 +22,16 @@ def reject_outliers(data, m=2.):
     return data[s < m]
 
 
-if __name__ == '__main__':
+def check_subtitles():
+    readers = [r() for r in ALL_READERS]
+    for reader in cycle(readers):
+        meta = next(reader)
+        if ' : ' in meta.title:
+            print(reader.__name__, meta.title)
 
-    SAMPLE_SIZE = 10000
+
+if __name__ == '__main__':
+    SAMPLE_SIZE = 100000
 
     title_sizes = []
     title_sizes_bytes = []
