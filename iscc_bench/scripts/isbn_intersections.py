@@ -67,7 +67,7 @@ def get_intersecting_isbns():
     return set.intersection(*isbn_sets)
 
 
-def build_metadata_pairs(samples=1000000):
+def build_metadata_pairs(samples=100):
     """
     Build sample data in format:
         isbn, title_a, authors_a, title_b, authors_b
@@ -78,7 +78,7 @@ def build_metadata_pairs(samples=1000000):
     """
     from itertools import cycle
     import gc
-    gc.disable()
+    gc.enable()
 
     combos = [c for c in combinations(ALL_READERS, 2)]
     samples_per_combo = int(samples/len(combos))
@@ -86,6 +86,7 @@ def build_metadata_pairs(samples=1000000):
 
     fp = os.path.join(iscc_bench.DATA_DIR, 'metapairs_%s.sample' % samples)
     total_samples = 0
+    seen_isbns = set()
 
     with open(fp, 'wb') as outf:
         for combo in combos:
@@ -107,7 +108,7 @@ def build_metadata_pairs(samples=1000000):
 
                 isbn = int(entry.isbn)
 
-                if isbn in relevant_isbns:
+                if isbn in relevant_isbns and isbn not in seen_isbns:
                     title = entry.title
                     author = entry.author
                     if isbn not in data:
@@ -124,6 +125,7 @@ def build_metadata_pairs(samples=1000000):
                         )
                         print(out_data)
                         outf.write(out_data.encode('utf-8'))
+                        seen_isbns.add(isbn)
                         total_samples += 1
                         relevant_isbns.remove(isbn)
                         del data[isbn]
@@ -136,9 +138,25 @@ def build_metadata_pairs(samples=1000000):
                         counter += 1
     print('Collected %s total samples' % total_samples)
 
+
+def clean_dupes():
+    fp = os.path.join(iscc_bench.DATA_DIR, 'metapairs_100000.sample')
+    seen_isbns = set()
+    wrote = 0
+    with open(fp, encoding='UTF-8') as infile:
+        with open(fp + '.clean', 'w', encoding='UTF-8') as outfile:
+            for line in infile:
+                isbn = line[:13]
+                if isbn not in seen_isbns:
+                    outfile.write(line)
+                    wrote += 1
+                seen_isbns.add(isbn)
+    print('Wrote %s lines.' % wrote)
+
 if __name__ == '__main__':
-    dump_isbns()
+    # dump_isbns()
     # print_isbn_stats()
     # print('Total all intersecting isbns: {}'.format(len(get_intersecting_isbns())))
     # print_data_source_intersections()
-    build_metadata_pairs()
+    # build_metadata_pairs(samples=1000)
+    clean_dupes()
