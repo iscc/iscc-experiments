@@ -10,11 +10,11 @@ from typing import List, ByteString, Sequence
 NGRAM_SIZE = 4
 
 SPLIT_MIN_ALGO = True
-SPLIT_MIN_LOWEST = 4
+SPLIT_MIN_LOWEST = 10
 
 
 INPUT_TRIM_TITLE = 128
-INPUT_TRIM_CREATORS = 0
+INPUT_TRIM_CREATORS = 128
 INPUT_TRIM_EXTRA = 128
 
 REMOVE_PARANTHESE = True
@@ -26,7 +26,7 @@ CUT_AFTER_SEMICOLON = True
 CUT_AFTER_SLASH = True
 CUT_AFTER_DASH = False
 CUT_AFTER_DOT = True
-CUT_AFTER_COMMA = True
+CUT_AFTER_COMMA = False
 
 RGX_PARANTHESE = re.compile(r'\([^()]*\)', flags=re.UNICODE)
 RGX_BRACKETS = re.compile(r'\[[^\]]*\]', flags=re.UNICODE)
@@ -200,7 +200,7 @@ if __name__ == '__main__':
     from iscclib import MetaID
 
     def iter_pairs():
-        fp = os.path.join(DATA_DIR, 'metapairs_10000.sample')
+        fp = os.path.join(DATA_DIR, 'metapairs_100000.sample')
         with open(fp, encoding='UTF-8') as sample_file:
             for line in sample_file:
                 yield tuple(line.strip('\n').split('|')[1:])
@@ -210,11 +210,17 @@ if __name__ == '__main__':
     hamming_distances = []
     true_positives = 0
     total = 0
+    meta_ids = []
 
     start = time.time()
     for row in iter_pairs():
         mid1 = MetaID.from_meta(row[0], row[1])
         mid2 = MetaID.from_meta(row[2], row[3])
+        # We keep both if they are different. None of them should colide with any of the other MetaIDs
+        if mid1.code != mid2.code:
+            meta_ids.extend([mid1.code, mid2.code])
+        else:
+            meta_ids.append(mid1.code)
         hd = mid1.hamming_distance(mid2)
         total += 1
         hamming_distances.append(hd)
@@ -227,16 +233,28 @@ if __name__ == '__main__':
     print('Max Hamming Distance %s' % max(hamming_distances))
     print('Mean Hamming Distance %s' % statistics.mean(hamming_distances))
     print('True Positives {} out of {}  ({}%)'.format(true_positives, total, true_positives / total * 100))
+    # Note: False positives is only aproximate as there are some rows with similar metadata for different isbns.
+    # So this is usefull only for relative comparison purposes.
+    total_meta_ids = len(meta_ids)
+    false_positives = len(meta_ids) - len(set(meta_ids))
+    print('False Positives {} out of {} ({}%)'.format(false_positives, total_meta_ids, false_positives / total_meta_ids * 100))
     print()
 
     print('Running Algo 2')
     hamming_distances = []
     true_positives = 0
     total = 0
+    meta_ids = []
+
     start = time.time()
     for row in iter_pairs():
         mid1 = generate_meta_id(row[0], row[1])
         mid2 = generate_meta_id(row[2], row[3])
+        if mid1 != mid2:
+            meta_ids.extend([mid1, mid2])
+        else:
+            meta_ids.append(mid1)
+
         hd = hamming_distance(mid1, mid2)
         total += 1
         hamming_distances.append(hd)
@@ -249,3 +267,7 @@ if __name__ == '__main__':
     print('Max Hamming Distance %s' % max(hamming_distances))
     print('Mean Hamming Distance %s' % statistics.mean(hamming_distances))
     print('True Positives {} out of {}  ({}%)'.format(true_positives, total, true_positives/total * 100))
+    total_meta_ids = len(meta_ids)
+    false_positives = len(meta_ids) - len(set(meta_ids))
+    print('False Positives {} out of {} ({}%)'.format(false_positives, total_meta_ids, false_positives / total_meta_ids * 100))
+
