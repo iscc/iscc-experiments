@@ -1,0 +1,7 @@
+# Dependencies
+# Install with `pip install -r requirements.txt`
+
+dhash==1.1
+tqdm==4.14.0
+requests==2.18.1
+tabulate==0.7.7
