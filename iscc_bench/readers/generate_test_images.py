@@ -1,16 +1,18 @@
 # -*- coding: utf-8 -*-
-import random
-
-from PIL import Image, ImageEnhance, ImageDraw
 import os
-
+import random
+import logging
+from PIL import Image, ImageEnhance, ImageDraw
 from PIL import ImageFilter
 from iscc_bench import DATA_DIR
 
+
+log = logging.getLogger(__name__)
 IMAGE_SRC_DIR = os.path.join(DATA_DIR, 'images')
 
 
 def prepare_images():
+    log.info('Preparing images')
     for key, image in enumerate(os.listdir(IMAGE_SRC_DIR)):
         name_parts = image.split('.')
         type = name_parts[len(name_parts) - 1]
@@ -19,13 +21,18 @@ def prepare_images():
         while os.path.exists(dst_path) and not dst_path == src_path:
             key += 1
             dst_path = os.path.join(IMAGE_SRC_DIR, '%s.%s' % (key, type))
-        os.rename(src_path, os.path.join(IMAGE_SRC_DIR, '%s.%s' % (key, type)))
+        out = os.path.join(IMAGE_SRC_DIR, '%s.%s' % (key, type))
+        os.rename(src_path,  out)
+        log.info('Renamed {} -> {}'.format(os.path.basename(src_path), os.path.basename(out)))
 
 
 def delete_test_images():
+    log.info('Deleting test images')
     for name in os.listdir(IMAGE_SRC_DIR):
         if '_' in name:
-            os.remove(os.path.join(IMAGE_SRC_DIR, name))
+            f = os.path.join(IMAGE_SRC_DIR, name)
+            os.remove(f)
+            log.info('Deleted {}'.format(os.path.basename(f)))
 
 
 def generate_test_images():
@@ -86,6 +93,9 @@ def generate_test_images():
 
 
 if __name__ == '__main__':
+    log_format = '%(asctime)s - %(levelname)s - %(message)s'
+    logging.basicConfig(level=logging.INFO, format=log_format)
+
     delete_test_images()
     prepare_images()
     generate_test_images()
