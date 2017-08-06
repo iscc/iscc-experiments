@@ -59,6 +59,7 @@ mapping_image = '''
 def from_image_dhash(image):
     image = Image.open(image)
     d_hash = dhash.dhash_int(image, 5)
+    print('{} is not 64-bit :)'.format(d_hash.bit_length()))
     return ImageID(ident=d_hash, bits=64)
 
 
