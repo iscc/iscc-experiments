@@ -86,6 +86,7 @@ def discrete_cosine_transform(value_list):
         result.append(value)
     return result
 
+
 def hamming_distance(id1, id2):
     symbols = u"H9ITDKR83F4SV12PAXWBYG57JQ6OCNMLUEZ"
     ident1 = 0
@@ -100,6 +101,7 @@ def hamming_distance(id1, id2):
         tot += 1
         x &= x - 1
     return tot
+
 
 def from_image_phash(image):
     hash_size = 8
@@ -121,6 +123,7 @@ def from_image_phash(image):
     for bit in bit_array:
         p_hash = (p_hash << 1) | bit
     return ImageID(ident=p_hash, bits=64)
+
 
 def get_error_types():
     total = es.count(index='iscc_images')['count']
@@ -179,6 +182,7 @@ def action_generator():
     print("pHash:", p_time / total)
     print("wHash:", w_time / total)
 
+
 def generate_ids():
     success = 0
     failed = 0
@@ -212,6 +216,7 @@ def check_values(hash):
                         errors[errorType].append(imageName)
     return errors
 
+
 def get_hamming(hash):
     total = es.count(index='iscc_images')['count']
     distances = {}
@@ -235,6 +240,7 @@ def get_hamming(hash):
                     distances[errorType].append(hamming_dist)
     return distances
 
+
 def evaluate():
     errors = {}
     hamming_distances = {}
@@ -252,7 +258,7 @@ def evaluate():
             else:
                 table_row.append(0)
         table_rows.append(table_row)
-    print("\nDifferent Hashes")
+    print("\nDifferent Hashes (higher is worse)")
     print(tabulate(table_rows, headers=['Error Type'] + hashes))
 
     for hash in hashes:
