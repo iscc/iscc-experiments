@@ -15,13 +15,13 @@ def prepare_images():
     log.info('Preparing images')
     for key, image in enumerate(os.listdir(IMAGE_SRC_DIR)):
         name_parts = image.split('.')
-        type = name_parts[len(name_parts) - 1]
+        ext = name_parts[len(name_parts) - 1]
         src_path = os.path.join(IMAGE_SRC_DIR, image)
-        dst_path = os.path.join(IMAGE_SRC_DIR, '%s.%s' % (key, type))
+        dst_path = os.path.join(IMAGE_SRC_DIR, '%s.%s' % (key, ext))
         while os.path.exists(dst_path) and not dst_path == src_path:
             key += 1
-            dst_path = os.path.join(IMAGE_SRC_DIR, '%s.%s' % (key, type))
-        out = os.path.join(IMAGE_SRC_DIR, '%s.%s' % (key, type))
+            dst_path = os.path.join(IMAGE_SRC_DIR, '%s.%s' % (key, ext))
+        out = os.path.join(IMAGE_SRC_DIR, '%s.%s' % (key, ext))
         os.rename(src_path,  out)
         log.info('Renamed {} -> {}'.format(os.path.basename(src_path), os.path.basename(out)))
 
