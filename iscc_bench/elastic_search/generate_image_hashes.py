@@ -10,6 +10,7 @@ from PIL import Image
 import os
 import dhash
 from tabulate import tabulate
+from iscc_bench.readers.blockhash import blockhash
 
 from elasticsearch import Elasticsearch
 from elasticsearch import helpers
@@ -38,6 +39,10 @@ mapping_image = '''
           "type": "keyword",
           "index": "true"
         },
+        "bHash": {
+          "type": "keyword",
+          "index": "true"
+        },
         "dHash": {
           "type": "keyword",
           "index": "true"
@@ -61,6 +66,14 @@ def from_image_dhash(image):
     d_hash = dhash.dhash_int(image, 5)
     print('{} is not 64-bit :)'.format(d_hash.bit_length()))
     return ImageID(ident=d_hash, bits=64)
+
+def from_image_bhash(image):
+    image = Image.open(image)
+    if image.mode not in ['RGBA', 'RGB']:
+        image = image.convert("RGB")
+    b_hash = blockhash(image, 8)
+    b_hash = int(b_hash, 16)
+    return ImageID(ident=b_hash, bits=64)
 
 
 def from_image_ahash(image):
@@ -145,6 +158,7 @@ def init_index():
 
 def action_generator():
     a_time = 0
+    b_time = 0
     d_time = 0
     p_time = 0
     w_time = 0
@@ -161,6 +175,9 @@ def action_generator():
         aiid = from_image_ahash(img_file)
         a_time += time.time() - start_time
         start_time = time.time()
+        biid = from_image_bhash(img_file)
+        b_time += time.time() - start_time
+        start_time = time.time()
         diid = from_image_dhash(img_file)
         d_time += time.time() - start_time
         start_time = time.time()
@@ -175,10 +192,11 @@ def action_generator():
             "_type": "default",
             "_source": {"name": name.split('_')[0], "errorType": errorType,
                         "wHash": "{}".format(wiid), "dHash": "{}".format(diid), "aHash": "{}".format(aiid),
-                        "pHash": "{}".format(piid)}
+                        "pHash": "{}".format(piid), "bHash": "{}".format(biid)}
         }
         yield query
     print("aHash:", a_time / total)
+    print("bHash:", b_time / total)
     print("dHash:", d_time / total)
     print("pHash:", p_time / total)
     print("wHash:", w_time / total)
@@ -187,7 +205,7 @@ def action_generator():
 def generate_ids():
     success = 0
     failed = 0
-    for ok, item in helpers.streaming_bulk(es, action_generator(), chunk_size=5000):
+    for ok, item in helpers.streaming_bulk(es, action_generator(), chunk_size=100):
         if ok:
             success += 1
         else:
@@ -245,7 +263,7 @@ def get_hamming(hash):
 def evaluate():
     errors = {}
     hamming_distances = {}
-    hashes = ['aHash', 'dHash', 'pHash', 'wHash']
+    hashes = ['aHash', 'bHash', 'dHash', 'pHash', 'wHash']
     for hash in hashes:
         errors[hash] = check_values(hash)
 
@@ -260,6 +278,15 @@ def evaluate():
                 table_row.append(0)
         table_rows.append(table_row)
     print("\nDifferent Hashes (higher is worse)")
+
+    totals = ['Total']
+    for hash in hashes:
+        hash_sum = 0
+        for type in errorTypes:
+            if type in errors[hash]:
+                hash_sum += len(errors[hash][type])
+        totals.append(hash_sum)
+    table_rows.append(totals)
     print(tabulate(table_rows, headers=['Error Type'] + hashes))
 
     for hash in hashes:
@@ -275,6 +302,14 @@ def evaluate():
             else:
                 table_row.append(0)
         table_rows.append(table_row)
+    averages = ['Average']
+    for hash in hashes:
+        hamming_sum = 0
+        for type in errorTypes:
+            if type in hamming_distances[hash]:
+                hamming_sum += sum(hamming_distances[hash][type]) / len(hamming_distances[hash][type])
+        averages.append(hamming_sum / len(errorTypes))
+    table_rows.append(averages)
     print("\nAverage Hamming Distances")
     print(tabulate(table_rows, headers=['Error Type'] + hashes))
 
