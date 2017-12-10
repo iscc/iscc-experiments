@@ -30,13 +30,13 @@ For automated benchmarking we need reference data from different sources with a 
 
 ### Todo:
 
-- Collect datasets
-- Write streaming parsers that filter incomplete datasets and yield normalized data
-- Collect all data in one file/db with fields (id, source, isbn, title, creators)
-- Create MetaIDs from data collection and count TP, TN, FP, FN
-- Test with different bit-lenght, metadata-normalization, shingle sizes, simhash/minhash
+- [x] Collect datasets
+- [x] Write streaming parsers that filter incomplete datasets and yield normalized data
+- [x] Collect all data in one file/db with fields (id, source, isbn, title, creators)
+- [x] Create MetaIDs from data collection and count TP, TN, FP, FN
+- [x] Test with different bit-lenght, metadata-normalization, shingle sizes, algorithms
 
-### Datasets
+### Datasets for Metadata
 
 All datasets with at least ISBN, Title, Creators fields qualify for MetaID testing.
 
@@ -50,3 +50,20 @@ All datasets with at least ISBN, Title, Creators fields qualify for MetaID testi
 | Google Books | 3 M       | XML                      | https://www.lib.msu.edu/gds/             |
 | BX Books     | 271.379   | CSV                      | http://www2.informatik.uni-freiburg.de/~cziegler/BX/ |
 | DBLP Dataset | 50.000    | XML                      | https://hpi.de/naumann/projects/repeatability/datasets/dblp-dataset.html |
+
+## Image-ID Benchmark
+
+Algorithms for testing:
+
+- ahash
+- dhash
+- whash
+- blockhash
+
+### Datasets for Image-ID
+
+| Name       | # Images | Format | Url                                      |
+| ---------- | -------- | ------ | ---------------------------------------- |
+| Caltech101 | 9145     | JPG    | http://www.vision.caltech.edu/Image_Datasets/Caltech101/ |
+| Caltech256 | 30607    | JPG    | http://www.vision.caltech.edu/Image_Datasets/Caltech256/ |
+
