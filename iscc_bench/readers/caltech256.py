@@ -44,10 +44,16 @@ def caltech_256():
 
 
 if __name__ == '__main__':
+    from hashlib import sha1
     log_format = '%(asctime)s - %(levelname)s - %(message)s'
     logging.basicConfig(level=logging.INFO, format=log_format)
 
+    sigs = {}
+    log.info('check caltech256 for exact duplicate images')
     for image_path in caltech_256():
-        print(image_path)
-
-
+        sig = sha1(open(image_path, 'rb').read()).hexdigest()
+        if sig not in sigs:
+            sigs[sig] = image_path
+        else:
+            print('{} -> {}'.format(image_path, sigs[sig]))
+    log.info('done checking caltech256 for exact duplicate images')
