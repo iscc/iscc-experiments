@@ -67,3 +67,17 @@ Algorithms for testing:
 | Caltech101 | 9145     | JPG    | http://www.vision.caltech.edu/Image_Datasets/Caltech101/ |
 | Caltech256 | 30607    | JPG    | http://www.vision.caltech.edu/Image_Datasets/Caltech256/ |
 
+
+## Music-ID Benchmark
+
+Algorithms for testing
+
+- [Chromaprint (AcousticID)](https://acoustid.org/chromaprint)
+
+
+### Datasets for Music-ID
+
+| Name       | # Tracks | Format | Url                                      |
+| ---------- | -------- | ------ | ---------------------------------------- |
+| FMA Small  | 8000     | MP3    | https://github.com/mdeff/fma |
+
