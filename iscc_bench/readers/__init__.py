@@ -7,6 +7,7 @@ from iscc_bench.readers.openlibrary import openlibrary
 from iscc_bench.readers.libgen import libgen
 from iscc_bench.readers.caltech101 import caltech_101
 from iscc_bench.readers.caltech256 import caltech_256
+from iscc_bench.readers.fma_small import fma_small
 
 ALL_READERS = (bxbooks, dnbrdf, harvard, openlibrary, libgen)
 ALL_IMAGE_READERS = (caltech_101, caltech_256)
