@@ -11,7 +11,7 @@ from itertools import islice
 from hashlib import sha256
 from iscc_bench.scripts.meta import simhash
 
-SPLIT_MIN_LOWEST = 10
+SPLIT_MIN_LOWEST = 5
 HEAD_CID_A = b'\x14'
 SYMBOLS = "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz"
 VALUES = ''.join([chr(i) for i in range(58)])
@@ -107,7 +107,7 @@ def decode(code: str) -> bytes:
 
 if __name__ == '__main__':
     import os
-    from iscc_bench.readers import fma_small
+    from iscc_bench.readers import fma_medium
     import shutil
     from iscc_bench import DATA_DIR
 
@@ -118,8 +118,8 @@ if __name__ == '__main__':
     os.makedirs(DUPES_PATH, exist_ok=True)
 
     aids = {}
-    log.info('check fma_small for duplicate audio ids')
-    for filepath in fma_small():
+    log.info('check fma_medium for duplicate audio ids')
+    for filepath in fma_medium():
         try:
             aid = generate_audio_id(filepath)
         except Exception:
@@ -135,4 +135,4 @@ if __name__ == '__main__':
             shutil.copy(srca, dsta)
             shutil.copy(srcb, dstb)
 
-    log.info('done checking fma_small for duplicate audio ids')
+    log.info('done checking fma_medium for duplicate audio ids')

@@ -51,11 +51,13 @@ if __name__ == '__main__':
 
     sigs = {}
     log.info('check fma_medium for exact duplicate tracks')
-    for image_path in fma_medium():
-        sig = sha1(open(image_path, 'rb').read()).hexdigest()
+    for audio_path in fma_medium():
+        fname = os.path.basename(audio_path)
+        sig = sha1(open(audio_path, 'rb').read()).hexdigest()
+        print(fname, sig)
         if sig not in sigs:
-            sigs[sig] = image_path
+            sigs[sig] = audio_path
         else:
-            print('Collision: {} -> {}'.format(image_path, sigs[sig]))
+            print('Collision: {} -> {}'.format(audio_path, sigs[sig]))
     log.info('done checking fma_medium for exact duplicate tracks')
 
