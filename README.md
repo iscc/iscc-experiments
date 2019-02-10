@@ -68,12 +68,12 @@ Algorithms for testing:
 | Caltech256 | 30607    | JPG    | http://www.vision.caltech.edu/Image_Datasets/Caltech256/ |
 
 
-## Music-ID Benchmark
+## Audio-ID Benchmark
 
 Algorithms for testing
 
 - [Chromaprint (AcousticID)](https://acoustid.org/chromaprint)
-
+- [Dejavu](https://github.com/worldveil/dejavu) 
 
 ### Datasets for Music-ID
 
