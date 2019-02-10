@@ -17,6 +17,8 @@ radialVarianceHash: Collisions: 0 - Mean: 1 - Median: 1.0 - Min 1 - Max 1
 colorMomentHash: Collisions: 0 - Mean: 1 - Median: 1.0 - Min 1 - Max 1
 marrHildrethHash: Collisions: 0 - Mean: 1 - Median: 1.0 - Min 1 - Max 1
 
+ahash, phash implementations of OpenCV and ImageHash are not compatible
+
 """
 import os
 import time
@@ -79,6 +81,27 @@ def collisions():
         )
 
 
+def compat():
+    """Test for compat with ImageHash Lib"""
+    from PIL import Image
+    import imagehash
+
+    img_path = list(ukbench())[0]
+    img = cv.imread(img_path)
+    avg_hash_cv = cv.img_hash.averageHash(img)
+    avg_hash_ih = imagehash.average_hash(Image.open(img_path))
+
+    print(avg_hash_cv.flatten())
+    print(list(bytearray.fromhex(str(avg_hash_ih))))
+
+    phash_cv = cv.img_hash.pHash(img)
+    phash_ih = imagehash.phash(Image.open(img_path))
+
+    print(phash_cv.flatten())
+    print(list(bytearray.fromhex(str(phash_ih))))
+
+
 if __name__ == '__main__':
     speed()
     collisions()
+    compat()
