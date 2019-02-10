@@ -39,7 +39,8 @@ def ukbench():
         with zipfile.ZipFile(DATA_FILE_PATH) as zf:
             zf.extractall(DATA_PATH)
 
-    for fp in utils.iter_files(DATA_PATH, exts=['jpg'], recursive=True):
+    image_path = os.path.join(DATA_PATH, 'full')
+    for fp in utils.iter_files(image_path, exts=['jpg'], recursive=True):
         yield fp
 
 
