@@ -1,4 +1,10 @@
-# ISCC Benchmarks
+# ISCC Experiments
+
+A collection of experiments aiding the development of the ISCC
+
+!!! note
+    This repository does not contain any production code
+
 
 We use the `iscc_bench` package for automated testing of accuracy and performance of the different ISCC components.
 
