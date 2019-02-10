@@ -72,6 +72,7 @@ Algorithms for testing:
 | ---------- | -------- | ------ | ---------------------------------------- |
 | Caltech101 | 9145     | JPG    | http://www.vision.caltech.edu/Image_Datasets/Caltech101/ |
 | Caltech256 | 30607    | JPG    | http://www.vision.caltech.edu/Image_Datasets/Caltech256/ |
+| ukbench    | 10200    | JPG    | https://archive.org/details/ukbench |
 
 
 ## Audio-ID Benchmark
