@@ -2,8 +2,7 @@
 
 A collection of experiments aiding the development of the ISCC
 
-!!! note
-    This repository does not contain any production code
+**Note**: This repository does not contain any production code
 
 
 We use the `iscc_bench` package for automated testing of accuracy and performance of the different ISCC components.
@@ -34,13 +33,6 @@ The benchmarking is intended to help us **maximize true positives and true negat
 
 For automated benchmarking we need reference data from different sources with a common identifier. The wide availability of bibliographic metadata and the common ISBN identifier is a good fit.
 
-### Todo:
-
-- [x] Collect datasets
-- [x] Write streaming parsers that filter incomplete datasets and yield normalized data
-- [x] Collect all data in one file/db with fields (id, source, isbn, title, creators)
-- [x] Create MetaIDs from data collection and count TP, TN, FP, FN
-- [x] Test with different bit-lenght, metadata-normalization, shingle sizes, algorithms
 
 ### Datasets for Metadata
 
