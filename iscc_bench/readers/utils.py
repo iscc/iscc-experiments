@@ -1,8 +1,12 @@
 # -*- coding: utf-8 -*-
 """Data aquisition utilities"""
 import os
+import logging
 from tqdm import tqdm
 import requests
+
+
+log = logging.getLogger(__name__)
 
 
 def download(url, save_to, chunk_size=1000000):
@@ -13,6 +17,7 @@ def download(url, save_to, chunk_size=1000000):
     :param int chunk_size: chunk size in bytes
     """
 
+    log.info('Downloading %s -> %s' % (url, save_to))
     r = requests.get(url, stream=True)
     with open(save_to, 'wb') as f:
         pbar = tqdm(unit="B", total=int(r.headers['Content-Length']))
@@ -51,3 +56,15 @@ def iter_files(root, exts=None, recursive=False):
                 ext = os.path.splitext(f)[-1].lstrip('.').lower()
                 if matches(ext):
                     yield os.path.join(root, f)
+
+
+def iter_bytes(filepath, chunksize=8192):
+    """Buffered byte by byte iteration over files"""
+    with open(filepath, "rb") as f:
+        while True:
+            chunk = f.read(chunksize)
+            if chunk:
+                for b in chunk:
+                    yield b
+            else:
+                break
