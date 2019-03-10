@@ -24,17 +24,17 @@ def random_text(length: int) -> str:
         return random_text(length)
 
 
-def trim_a(text: str) -> str:
+def trim_a(text: str, max_len=INPUT_TRIM) -> str:
     while True:
         data = text.encode('utf-8')
-        if len(data) <= INPUT_TRIM:
+        if len(data) <= max_len:
             return text
         else:
             text = text[:-1]
 
 
-def trim_b(text: str) -> str:
-    return text.encode('utf-8')[:INPUT_TRIM].decode('utf-8', 'ignore')
+def trim_b(text: str, max_len=INPUT_TRIM) -> str:
+    return text.encode('utf-8')[:max_len].decode('utf-8', 'ignore')
 
 
 def benchmark(n=1000):
