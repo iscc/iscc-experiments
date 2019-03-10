@@ -5,6 +5,7 @@ from hashlib import sha1
 
 PACKAGE_DIR = os.path.dirname(__file__)
 DATA_DIR = os.path.join(PACKAGE_DIR, 'data')
+BIN_DIR = os.path.join(PACKAGE_DIR, 'bin')
 
 
 MetaDataBase = namedtuple('Meta', 'isbn title author')
