@@ -11,7 +11,7 @@ def timing(func):
         start = time.time()
         ret = func(*args)
         end = time.time()
-        print(f"{func.__name__} function took {(end - start)*1000.0:.3f} ms")
+        print(f"{func.__name__} function took {(end - start)*1000.0:.3f} ms\n")
         return ret
 
     return wrap
