@@ -11,9 +11,9 @@ from statistics import mean
 from hyperopt import hp, fmin, tpe, Trials
 from iscc_bench.algos.metrics import containment
 from iscc_bench.algos.slide import sliding_window
-from iscc_bench.readers.gutenberg import gutenberg
 from os.path import basename
-from iscc_bench.textid.normalize import normalize
+from iscc_bench.readers.mltext import mltext
+import matplotlib.pyplot as plt
 
 logr = logging.getLogger(__name__)
 
@@ -86,7 +86,7 @@ def chunk_data(data, min_size, max_size, shift) -> List[bytes]:
 
 
 def objective(space):
-    fps = list(gutenberg())[:SAMPLES]
+    fps = list(mltext())[:SAMPLES]
 
     min_size = int(space['min_size'])
     max_size = int(space['max_size'])
@@ -135,6 +135,11 @@ def objective(space):
         logr.debug(f'Loss: {loss:.3f} Sim: {sim_sim:.3f} Dif: {sim_dif:.3f} ({basename(fp_a)})')
         losses.append(loss)
     loss = mean(losses)
+    plt.hist(chunk_sizes, color='blue', edgecolor='black',
+             bins=int(max_size/16)
+             )
+    plt.title(f'Min: {min_size} - Max {max_size} - Shift {shift}')
+    plt.show()
     return {
         'status': 'ok',
         'loss': loss,
@@ -164,6 +169,7 @@ def optimize():
     )
     pprint(trials.best_trial)
     print(f'Best Parameters: {best}')
+
 
 
 if __name__ == '__main__':
