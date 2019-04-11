@@ -1,39 +1,47 @@
 # -*- coding: utf-8 -*-
 """Text normalization"""
 import unicodedata
+from iscc_bench.textid.const import UNICODE_RANGES
+
+NFORM = 'NFD'  # Unicode Normalization form
+LOWER = True   # Make all text lowercase
+
+# Unicode categories to remove during text normalization
+FILTR = frozenset({
+    'Cc', 'Cf', 'Cn', 'Co', 'Cs',
+    'Mc', 'Me', 'Mn',
+    'Pc', 'Pd', 'Pe', 'Pf', 'Pi', 'Po', 'Ps',
+    'Zl', 'Zp', 'Zs',
+})
 
 
-def is_cc(char):
-    """Checks whether `chars` is a control character."""
-    # These are  control characters but we count them as whitespace.
-    if char == "\t" or char == "\n" or char == "\r":
-        return False
-    cat = unicodedata.category(char)
-    if cat.startswith("C"):
-        return True
-    return False
+def chars():
+    """Iterate over all unicode characters"""
+    for block in UNICODE_RANGES:
+        for cp in range(block[0], block[1] + 1):
+            yield chr(cp)
 
 
-def is_ws(char):
-    """Checks whether `char` is a whitespace character."""
-    # \t, \n, and \r are control characters but we treat them as whitespace.
-    if char == " " or char == "\t" or char == "\n" or char == "\r":
-        return True
-    cat = unicodedata.category(char)
-    if cat == "Zs":
-        return True
-    return False
+def blacklist(filtr=FILTR):
+    """Blacklisted unicode characters"""
+    return [c for c in chars() if unicodedata.category(c) in filtr]
 
 
-def normalize(text: str) -> str:
-    text = unicodedata.normalize("NFD", text)
-    chars = []
-    for char in text:
-        cp = ord(char)
-        cat = unicodedata.category(char)
-        # skip control chars
-        if cp == 0 or cp == 0xfffd or is_cc(char) or is_ws(char) or cat == "Mn":
-            continue
-        chars.append(char.lower())
-    return "".join(chars)
+TR_TABLE = str.maketrans(dict.fromkeys(blacklist()))
+
+
+def text_normalize(text: str) -> str:
+    text = unicodedata.normalize(NFORM, text)
+    text = text.translate(TR_TABLE)
+    if LOWER:
+        text = text.lower()
+    return text
+
+
+if __name__ == '__main__':
+    text = 'Iñtërnâtiônàlizætiøn☃💩 – is a "ticky" \u00A0 thing!'
+    norm = text_normalize(text)
+    assert norm == "internationalizætiøn☃💩isatickything"
+    print(text)
+    print(norm)
 
