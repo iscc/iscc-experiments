@@ -52,10 +52,15 @@ PRIO = {
 SKIP_GIDS = ('22242', '31552', '17424', '39121')
 
 
-def gutenberg():
+def gutenberg(lang=None):
     """Yield file path (pairwise sorted) to gutenberg extracted texts"""
     for fp in sorted(utils.iter_files(DATA_TEXT, exts=['txt'])):
-        yield fp
+        if lang is None:
+            yield fp
+        else:
+            file_lang = basename(fp).split('_')[1]
+            if lang.lower() == file_lang.lower():
+                yield fp
 
 
 def extract_text():
