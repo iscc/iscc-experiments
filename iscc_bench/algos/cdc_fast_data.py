@@ -6,17 +6,19 @@ from statistics import mean
 
 from iscc_bench.algos.metrics import containment
 from iscc_bench.algos.slide import sliding_window
-from iscc_bench.readers.gutenberg import gutenberg
+import matplotlib.pyplot as plt
+
+from iscc_bench.readers.mltext import mltext
 
 logr = logging.getLogger(__name__)
 
 MAX_INT64 = 2**64-1
 
-GEAR2_NORM = 512
-GEAR2_MIN = 128
-GEAR2_MAX = 4096
-GEAR2_MASK1 = 0b1101100110110100000000
-GEAR2_MASK2 = 0b11100101010110000000
+GEAR2_NORM = 800
+GEAR2_MIN = 200
+GEAR2_MAX = 6400
+GEAR2_MASK1 = 0x00d9030351
+GEAR2_MASK2 = 0x00d9000351
 
 CHUNKING_GEAR = [
     9584138480181866666, 4739450037122062430, 1042006760432515769, 10675154520554330663, 15869016765101259526,
@@ -130,7 +132,7 @@ SAMPLES = 500
 
 
 def test_data_chunks():
-    fps = list(gutenberg())[:SAMPLES]
+    fps = list(mltext())[:SAMPLES]
 
     losses = []
     chunk_sizes = []
@@ -153,14 +155,16 @@ def test_data_chunks():
         def cut_regions(chunks):
             regs = []
             for a, b in sliding_window(chunks, size=2, step=1):
-                regs.append(a[-6:] + b[:6])
+                regs.append(a[-3:] + b[:3])
             return regs
 
         # select cutpoint regions only
-        chunks_a = cut_regions(chunks_a)
-        chunks_b = cut_regions(chunks_b)
-        chunks_c = cut_regions(chunks_c)
-
+        try:
+            chunks_a = cut_regions(chunks_a)
+            chunks_b = cut_regions(chunks_b)
+            chunks_c = cut_regions(chunks_c)
+        except:
+            continue
         num_chunks.append(len(chunks_a))
 
         sim_sim = containment(chunks_a, chunks_b)
@@ -171,6 +175,8 @@ def test_data_chunks():
         loss = sim_sim / (sim_dif or 0.00001)
         logr.debug(f'Loss: {loss:.3f} Sim: {sim_sim:.3f} Dif: {sim_dif:.3f} ({basename(fp_a)})')
         losses.append(loss)
+    plt.hist(chunk_sizes, color='blue', edgecolor='black', bins=int(2048/16))
+    plt.show()
     return {
         'status': 'ok',
         'loss': mean(losses),
@@ -187,3 +193,4 @@ if __name__ == '__main__':
     log_format = '%(asctime)s - %(levelname)s - %(message)s'
     logging.basicConfig(level=logging.DEBUG, format=log_format)
     pprint(test_data_chunks())
+    print(len(CHUNKING_GEAR))
