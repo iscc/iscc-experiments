@@ -14,6 +14,7 @@ minhash_xor_np    : 147.60 ms runtime
 minhash_xor_numba : 10.97 ms runtime
 """
 import time
+from itertools import chain
 import numpy as np
 from xxhash import xxh32_intdigest, xxh64_intdigest
 from numba import njit
@@ -23,10 +24,11 @@ from iscc_bench.algos.const import MINHASH_PERMUTATIONS
 from iscc_bench.algos.metrics import jaccard
 from iscc_bench.algos.slide import sliding_window
 from iscc_bench.readers.gutenberg import gutenberg
+from iscc_bench.readers.mltext import mltext
 from iscc_bench.textid.normalize import text_normalize
 from iscc_bench.utils import load_text_file
 
-rand = np.random.RandomState(seed=298)
+rand = np.random.RandomState(seed=28)
 
 MAX_UINT64 = (1 << 64) - 1
 MASKS_64_NP = rand.randint(0, MAX_UINT64, 64, dtype=np.uint64)
@@ -64,10 +66,8 @@ def minhash_ref_opt(features_32):
     max_hash = (1 << 32) - 1
     perms = [*zip(*MINHASH_PERMUTATIONS)]
     return [min(
-        [
             (((a * f + b) & max_int64) % mersenne_prime) & max_hash
             for f in features_32
-        ]
     ) for a, b in perms[:128]]
 
 
@@ -238,7 +238,7 @@ def performance():
         minhash_xor_np    :  153.59 ms runtime
         minhash_xor_numba :   11.97 ms runtime
     """
-    nfeat = 100000
+    nfeat = 10000
     print(f'\nTesting minhash performance with {nfeat} features:\n')
 
     # Reference
@@ -272,7 +272,7 @@ def performance():
 def quality(seed=298):
     print('\nTesting minhash quality:\n')
 
-    fps = list(gutenberg())
+    fps = list(chain(gutenberg(), mltext()))
 
     def chunkify(text):
         return [''.join(c) for c in sliding_window(text, 13)]
@@ -283,6 +283,35 @@ def quality(seed=298):
     def hashify_64(chunks):
         return np.array([xxh64_intdigest(f) for f in chunks], np.uint64)
 
+    # Minhash XOR 64
+    sim_errs_ref = []
+    dis_errs_ref = []
+    for abc in sliding_window(fps, 3, 2, fillvalue=None):
+        abc = list(abc)
+        if abc[-1] is None:
+            continue
+        texts = (load_text_file(t) for t in abc)
+        norm_texts = (text_normalize(t) for t in texts)
+        chunked_texts = [chunkify(t) for t in norm_texts]
+        feature_texts = [hashify_32(f) for f in chunked_texts]
+        sim_sim = jaccard(feature_texts[0], feature_texts[1])
+        sim_dis = jaccard(feature_texts[0], feature_texts[2])
+        mhashes = [minhash_xor_numba(f) for f in feature_texts]
+        mh_sim_sim = jaccard(mhashes[0], mhashes[1])
+        mh_sim_dis = jaccard(mhashes[0], mhashes[2])
+        sim_errs_ref.append(abs(sim_sim - mh_sim_sim))
+        dis_errs_ref.append(abs(sim_dis - mh_sim_dis))
+    print(
+        f'minhash xor 64: '
+        f'Error Sim Mean {mean(sim_errs_ref)} - '
+        f'Max {max(sim_errs_ref)} - '
+        f'Var {variance(sim_errs_ref)} | '
+        f'Error Dis Mean {mean(dis_errs_ref)} - '
+        f'Max {max(dis_errs_ref)} - '
+        f'Var {variance(dis_errs_ref)}'
+    )
+
+    # Minhash Ref 64
     sim_errs_ref = []
     dis_errs_ref = []
     for abc in sliding_window(fps, 3, 2, fillvalue=None):
@@ -301,7 +330,7 @@ def quality(seed=298):
         sim_errs_ref.append(abs(sim_sim - mh_sim_sim))
         dis_errs_ref.append(abs(sim_dis - mh_sim_dis))
     print(
-        f'minhash ref numba: '
+        f'minhash ref 64: '
         f'Error Sim Mean {mean(sim_errs_ref)} - '
         f'Max {max(sim_errs_ref)} - '
         f'Var {variance(sim_errs_ref)} | '
@@ -310,9 +339,7 @@ def quality(seed=298):
         f'Var {variance(dis_errs_ref)}'
     )
 
-    rand = np.random.RandomState(seed=seed)
-    masks = rand.randint(0, MAX_UINT64, 64, dtype=np.uint64)
-
+    # Minhash Ref 192
     sim_errs_ref = []
     dis_errs_ref = []
     for abc in sliding_window(fps, 3, 2, fillvalue=None):
