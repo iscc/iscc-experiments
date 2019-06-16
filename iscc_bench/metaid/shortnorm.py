@@ -14,6 +14,7 @@ def shortest_normalization_form():
     nfkc = unicodedata.normalize('NFKC', s)
     nfkd = unicodedata.normalize('NFKD', s)
     nfd_nfkc = unicodedata.normalize('NFKC', nfd)
+    nfd_nfc = unicodedata.normalize('NFC', nfd)
 
     print('UTF-8 length of normalized strings:\n')
     print(f'NFC: {len(nfc.encode("utf8"))}')
@@ -21,6 +22,7 @@ def shortest_normalization_form():
     print(f'NFKC: {len(nfkc.encode("utf8"))}')
     print(f'NFKD: {len(nfkd.encode("utf8"))}')
     print(f'NFD_NFKC: {len(nfd_nfkc.encode("utf8"))}')
+    print(f'NFD_NFC: {len(nfd_nfc.encode("utf8"))}')
 
 
 if __name__ == '__main__':
