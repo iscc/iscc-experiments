@@ -8,8 +8,7 @@ import subprocess
 import json
 from typing import Sequence
 from itertools import islice
-from hashlib import sha256
-from iscc_bench.scripts.meta import simhash
+import iscc
 
 SPLIT_MIN_LOWEST = 5
 HEAD_CID_A = b'\x14'
@@ -19,37 +18,28 @@ C2VTABLE = str.maketrans(SYMBOLS, VALUES)
 V2CTABLE = str.maketrans(VALUES, SYMBOLS)
 IDTABLE = str.maketrans(SYMBOLS, SYMBOLS)
 
+
 log = logging.getLogger(__name__)
 
 
-def generate_audio_id(filepath):
-    vec = get_chroma_vector(filepath)
-    byte_features = tuple(v.to_bytes(4, 'big') for v in vec)
+def generate_audio_id(filepath, partial= False):
+    features = get_chroma_vector(filepath)
+    minhash = iscc.minimum_hash(features, n=64)
+    lsb = "".join([str(x & 1) for x in minhash])
+    digest = int(lsb, 2).to_bytes(8, "big", signed=False)
+    # 7. Prepend component header
+    if partial:
+        content_id_audio_digest = iscc.HEAD_CID_A_PCF + digest
+    else:
+        content_id_audio_digest = iscc.HEAD_CID_A + digest
 
-    a = byte_features
-    b = tuple(sliding_window(byte_features, n=2))
-    c = tuple(sliding_window(byte_features, n=3))
-
-    n_grams = a + b + c
-    hash_digests = [sha256(s).digest() for s in n_grams]
-
-    splited_digests = []
-    for h_dig in hash_digests:
-        splited_digests.extend(
-            [h_dig[i:i + 8] for i in range(0, len(h_dig), 8)])
-    splited_digests.sort()
-    min_hash_digests = splited_digests[:SPLIT_MIN_LOWEST]
-    # Rehash so we don´t clutter lower hash spaces
-    rehashed = [sha256(h).digest() for h in min_hash_digests]
-    simhash_digest = simhash(rehashed)
-    audio_id_digest = HEAD_CID_A + simhash_digest[:8]
-    audio_id_code = encode(audio_id_digest)
-    return audio_id_code
+    # 8. Encode and return
+    return iscc.encode(content_id_audio_digest)
 
 
 def get_chroma_vector(filepath) -> Sequence[int]:
     """Returns 32-bit (4 byte) integers as features"""
-    cmd = ['fpcalc', '-raw', '-json', filepath]
+    cmd = ['fpcalc', filepath, '-raw', '-json']
     res = subprocess.run(cmd, stdout=subprocess.PIPE)
     vec = json.loads(res.stdout.decode('utf-8'))['fingerprint']
     return vec
@@ -66,48 +56,9 @@ def sliding_window(seq: Sequence[bytes], n=2) -> Sequence[bytes]:
         yield b''.join(result)
 
 
-def encode(digest: bytes) -> str:
-    assert len(digest) == 9, "ISCC component digest must be 9 bytes."
-    digest = reversed(digest)
-    value = 0
-    numvalues = 1
-    for octet in digest:
-        octet *= numvalues
-        value += octet
-        numvalues *= 256
-    chars = []
-    while numvalues > 0:
-        chars.append(value % 58)
-        value //= 58
-        numvalues //= 58
-    return str.translate(''.join([chr(c) for c in reversed(chars)]), V2CTABLE)
-
-
-def decode(code: str) -> bytes:
-    assert len(code) == 13, "ISCC component code must be 13 chars."
-    bit_length = 72
-    code = reversed(str.translate(code, C2VTABLE))
-    value = 0
-    numvalues = 1
-    for c in code:
-        c = ord(c)
-        c *= numvalues
-        value += c
-        numvalues *= 58
-
-    numvalues = 2 ** bit_length
-    data = []
-    while numvalues > 1:
-        data.append(value % 256)
-        value //= 256
-        numvalues //= 256
-
-    return bytes(reversed(data))
-
-
 if __name__ == '__main__':
     import os
-    from iscc_bench.readers import fma_medium
+    from iscc_bench.readers import fma_small
     import shutil
     from iscc_bench import DATA_DIR
 
@@ -119,9 +70,10 @@ if __name__ == '__main__':
 
     aids = {}
     log.info('check fma_medium for duplicate audio ids')
-    for filepath in fma_medium():
+    for filepath in fma_small():
         try:
             aid = generate_audio_id(filepath)
+            print(aid, filepath)
         except Exception:
             continue
         if aid not in aids:
