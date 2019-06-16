@@ -5,7 +5,7 @@ from statistics import mean
 import unicodedata
 import iscc
 from iscc_bench.readers.gutenberg import gutenberg
-from iscc_bench.textid.normalize import text_normalize
+from iscc_bench.textid.normalize import text_normalize, text_normalize_simple
 
 REMOVE_WHITESPACE = False
 REMOVE_ACCENTS = False
@@ -83,14 +83,17 @@ def norm_filter(text):
 
 
 if __name__ == '__main__':
-    print('Benchmarking iscc reference ...\n')
-    benchmark(iscc.text_normalize)
+    # print('Benchmarking iscc reference ...\n')
+    # benchmark(iscc.text_normalize)
+    #
+    # print('\n\nBenchmark minimal_fast (NFC + split & join + lowercase) ...\n')
+    # benchmark(minimal_fast)
+    #
+    # print('\n\nBenchmark filter_norm (remove accents) ... \n')
+    # benchmark(norm_filter)
 
-    print('\n\nBenchmark minimal_fast (NFC + split & join + lowercase) ...\n')
-    benchmark(minimal_fast)
+    print('\n\nNew text normalization (v.1.1). Simple reference implementation \n')
+    benchmark(text_normalize_simple)
 
-    print('\n\nBenchmark filter_norm (remove accents) ... \n')
-    benchmark(norm_filter)
-
-    print('\n\nNew favored normalization after experimentation ... \n')
+    print('\n\nNew text normalization (v.1.1). Performance optimized implementation \n')
     benchmark(text_normalize)

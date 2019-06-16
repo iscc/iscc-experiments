@@ -11,7 +11,7 @@ FILTR = frozenset({
     'Cc', 'Cf', 'Cn', 'Co', 'Cs',
     'Mc', 'Me', 'Mn',
     'Pc', 'Pd', 'Pe', 'Pf', 'Pi', 'Po', 'Ps',
-    'Zl', 'Zp', 'Zs',
+    # 'Zl', 'Zp', 'Zs',
 })
 
 
@@ -30,18 +30,63 @@ def blacklist(filtr=FILTR):
 TR_TABLE = str.maketrans(dict.fromkeys(blacklist()))
 
 
-def text_normalize(text: str) -> str:
+def text_normalize(text: str, keep_ws: bool = False) -> str:
+    text = text.strip().lower()
     text = unicodedata.normalize(NFORM, text)
     text = text.translate(TR_TABLE)
-    if LOWER:
-        text = text.lower()
+
+    if keep_ws:
+        text = ' '.join(text.split())
+    else:
+        text = ''.join(text.split())
+
     return text
 
 
-if __name__ == '__main__':
-    text = 'Iñtërnâtiônàlizætiøn☃💩 – is a "ticky" \u00A0 thing!'
-    norm = text_normalize(text)
-    assert norm == "internationalizætiøn☃💩isatickything"
+def text_normalize_simple(text: str, keep_ws: bool = False) -> str:
+
+    text = text.strip().lower()
+    text = unicodedata.normalize(NFORM, text)
+
+    chars = []
+    for c in text:
+        cat = unicodedata.category(c)
+        if cat not in FILTR:
+            chars.append(c)
+
+    text = ''.join(chars)
     print(text)
+
+    if keep_ws:
+        text = ' '.join(text.split())
+    else:
+        text = ''.join(text.split())
+
+    return text
+
+
+"""
+Always remove leading/trailing whitespace
+Always remove duplicate whitspace
+Always normalize whitespace (all \t,\r, \n becomes " ")
+Optional remove all whitespace
+"""
+
+
+if __name__ == '__main__':
+    text = '  Iñtërnâtiôn\nàlizætiøn☃💩 –  is a tric\t ky \u00A0 thing!\r'
+
+    norm = text_normalize(text, keep_ws=False)
+    norms = text_normalize_simple(text, keep_ws=False)
     print(norm)
+    print(norms)
+    assert norm == norms
+
+    norm_kws = text_normalize(text, keep_ws=True)
+    norms_kws = text_normalize_simple(text, keep_ws=True)
+    print(norm_kws)
+    print(norms_kws)
+    assert norm_kws == norms_kws
+
+    print(text_normalize_simple('Hello\nWorld', keep_ws=True))
 
