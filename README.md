@@ -66,7 +66,6 @@ Algorithms for testing:
 | Caltech256 | 30607    | JPG    | http://www.vision.caltech.edu/Image_Datasets/Caltech256/ |
 | ukbench    | 10200    | JPG    | https://archive.org/details/ukbench |
 
-
 ## Audio-ID Benchmark
 
 Algorithms for testing
@@ -79,4 +78,19 @@ Algorithms for testing
 | Name       | # Tracks | Format | Url                                      |
 | ---------- | -------- | ------ | ---------------------------------------- |
 | FMA Small  | 8000     | MP3    | https://github.com/mdeff/fma |
+
+## Video-ID Benchmark
+
+Feature Extraction: 
+
+- The MPEG-7 Video Signature Tools for Content Identification 
+  CCXF6KNnZRcG9-CTKppFGShGYVr-CDbg3f1taa7iV-CRjEWb4JwxW9V
+
+
+
+### Datasets for Video-ID
+
+| Name         | # Videos    | Format | URL                                                |
+| ------------ | ----------- | ------ | -------------------------------------------------- |
+| CC_WEB_VIDEO | 13137 (85G) | Mixed  | http://vireo.cs.cityu.edu.hk/webvideo/Download.htm |
 
