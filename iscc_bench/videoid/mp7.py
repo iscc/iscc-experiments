@@ -104,21 +104,23 @@ def wta_permutations(seed=WTA_SEED, vl=380, n=256) -> Tuple:
 def wta_hash(vec, hl=64) -> bytes:
     """Calculate hl-bit WTA Hash from vector."""
     vl = len(vec)
-    # perms = wta_permutations(WTA_SEED, vl, hl)
-    perms = WTA_PERMUTATIONS
+    perms = wta_permutations(WTA_SEED, vl, hl)
+    # perms = WTA_PERMUTATIONS
     log.debug(f"WTA vec length: {vl}")
     h = []
+    assert len(set(vec)) > 1, 'Vector for wta_hash needs at least 2 different values.'
 
     def get_neq_vals(idxs):
         vals = vec[idxs[0]], vec[idxs[1]]
         while vals[0] == vals[1]:
-            vals = idxs[0], (idxs[1] + 1) % vl
+            idxs = idxs[0], (idxs[1] + 1) % vl
+            vals = vec[idxs[0]], vec[idxs[1]]
         return vals
 
-    for n, idxs in enumerate(perms):
+    for idxs in perms:
         vals = get_neq_vals(idxs)
         h.append(vals.index(max(vals)))
-        if n == hl:
+        if len(h) == hl:
             break
     h = bytes([int("".join(map(str, h[i : i + 8])), 2) for i in range(0, len(h), 8)])
     log.debug(f"Hash length {len(h)}")
@@ -146,7 +148,7 @@ def content_id_video(file, partial=False):
 
 if __name__ == "__main__":
     p1 = "C:/Users/titusz/Code/iscc-experiments/iscc_bench/data/web_video/7_1_Y.flv"
-    p2 = "C:/Users/titusz/Code/iscc-experiments/iscc_bench/data/web_video/7_9_Y.flv"
+    p2 = "C:/Users/titusz/Code/iscc-experiments/iscc_bench/data/web_video/7_2_Y.flv"
     cidv1 = content_id_video(p1)
     cidv2 = content_id_video(p2)
     print(WTA_SEED, cidv1, cidv2, "- Hamming Distance:", iscc.distance(cidv1, cidv2))

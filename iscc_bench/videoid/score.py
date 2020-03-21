@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """Find a good discriminative random seed for WTA hash.
-Winner: Seed 10: AvgSim 3.75, AvgDis 29.875, AvgSpread 26.125
+Winner: Seed 10: AvgSim 3.75, AvgDis 29.833333333333332, AvgSpread 26.083333333333332
 """
 from os.path import basename
 import iscc
@@ -24,7 +24,7 @@ def score():
             qid = basename(base).split("_")[0]
             r = dict(qid=qid, sim=sim, dis=dis, spr=dis - sim)
             stats.append(r)
-            log.debug(r)
+            log.info(r)
         avg_sim = mean((e["sim"] for e in stats))
         avg_dis = mean((e["dis"] for e in stats))
         avg_spread = mean((e["spr"] for e in stats))
@@ -35,7 +35,6 @@ def score():
 
 if __name__ == "__main__":
     import sys
-
     log.remove()
     log.add(sys.stderr, level="INFO")
     score()
