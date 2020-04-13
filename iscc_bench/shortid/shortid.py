@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 import math
 import os
-
 from loguru import logger as log
 import varint
 import iscc
@@ -38,39 +37,58 @@ def chars_from_nbytes(nbytes):
     return math.ceil(math.log(256 ** nbytes, 58))
 
 
-def code_length():
-    """Demonstrate code length calculation"""
+def demo_code_length():
+    """Demo code length calculation"""
+    log.info("Code length calculation demo:")
     for x in range(2, 37):
+        log.info(
+            "B: %s bytes = %s calculated chars"
+            % (x, chars_from_nbytes(1) + chars_from_nbytes(x - 1))
+        )
         b = os.urandom(x)
         head = b58i_encode(b[:1])
         tail = b58i_encode(b[1:])
-        log.info("A: %s bytes = %s chars" % (x, len(head + tail)))
-        log.info(
-            "B: %s bytes = %s chars"
-            % (x, chars_from_nbytes(1) + chars_from_nbytes(len(b) - 1))
-        )
-        log.info("C: %s sample = %s" % (x, head + tail))
+        log.info("A: %s bytes = %s actual chars" % (x, len(head + tail)))
 
 
-def demo():
-    """Varint Short-ID demo (create & increment)"""
-    log.info("varint 0 %s" % varint.encode(0))
-    log.info("varint 1 %s" % varint.encode(1))
-    log.info("varint 127 %s" % varint.encode(127))
-    log.info("varint 128 %s" % varint.encode(128))
+def demo_varint():
+    """Demo how varints are encoded"""
+    log.info("Varint Demo:")
+    for n in (0, 1, 15, 65, 127, 128, 255, 256, 512, 1024, 4097):
+        log.info("varint %s = %s" % (n, varint.encode(n).hex()))
+    log.info("-------------------------")
+
+
+def demo_short_id():
+    """Short-ID demo (create & increment)"""
+    log.info("Short-ID Demo:")
     log.info("SID Header Private Use Hex: %s" % HEAD_SID_PU.hex())
     log.info("SID Header Private Use Base58-ISCC: %s" % iscc.encode(HEAD_SID_PU))
     log.info("SID Header Chain 1 Hex: %s" % HEAD_SID_CB.hex())
     log.info("SID Header Chain 1 Base58-ISCC: %s" % iscc.encode(HEAD_SID_CB))
-    sc = short_id("CCHMv6dBdaeRt-CTFZ83Wzeqni5-CDjCodB8XmwhX-CRLTbsya3b7WP")
-    log.info("Short-ID %s" % sc)
-    sc = short_id("CCEHYMWPvwFJ9-CTTptP3nH1B1f-CDZfMns823tas-CRNqPhtfATiXX")
-    log.info("Short-ID %s" % sc)
-    for x in range(1, 260):
+    iscc_full = "CCHMv6dBdaeRt-CTFZ83Wzeqni5-CDjCodB8XmwhX-CRLTbsya3b7WP"
+    sc = short_id(iscc_full)
+    log.info("ISCC Code: %s" % iscc_full)
+    log.info("Short-ID:  %s" % sc)
+    iscc_full = "CCEHYMWPvwFJ9-CTTptP3nH1B1f-CDZfMns823tas-CRNqPhtfATiXX"
+    sc = short_id(iscc_full, HEAD_SID_PU)
+    log.info("ISCC Code: %s" % iscc_full)
+    log.info("Short-ID:  %s" % sc)
+    for x in range(1, 10):
         sc = incr(sc)
-        log.info("Short Code %s: %s" % (x, sc))
+        log.info("Short-ID (private) %s: %s" % (x, sc))
+    sc = short_id(iscc_full, HEAD_SID_CB)
+    for x in range(1, 10):
+        sc = incr(sc)
+        log.info("Short-ID (coblo) %s: %s" % (x, sc))
+    log.info("-------------------------")
+
+
+def run_demos():
+    demo_code_length()
+    demo_varint()
+    demo_short_id()
 
 
 if __name__ == "__main__":
-    code_length()
-    demo()
+    run_demos()
