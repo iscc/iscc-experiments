@@ -4,6 +4,7 @@ import os
 from loguru import logger as log
 import varint
 import iscc
+from iscc_bench.shortid import bech32
 from iscc_bench.shortid.utils import (
     iscc_decode,
     HEAD_SID_PU,
@@ -84,10 +85,23 @@ def demo_short_id():
     log.info("-------------------------")
 
 
+def demo_bech32():
+    byte_sizes = (8, 9, 36, 54)
+    hrp = "cc"
+    log.info("bech32-encoding")
+    for x in byte_sizes:
+        data_iscc = bech32.convertbits(os.urandom(x), 8, 5)
+        iscc_bcoded = "".join([bech32.CHARSET[d] for d in data_iscc])
+        log.info(f"ISCC-{x}: {iscc_bcoded.upper()} ({len(iscc_bcoded)} chars).")
+        iscc_bcoded = bech32.bech32_encode(hrp, data_iscc)
+        log.info(f"ISCC-{x}-HC: {iscc_bcoded.upper()} ({len(iscc_bcoded)} chars).")
+
+
 def run_demos():
     demo_code_length()
     demo_varint()
     demo_short_id()
+    demo_bech32()
 
 
 if __name__ == "__main__":
