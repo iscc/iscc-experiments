@@ -1,0 +1,7 @@
+syntok
+tensorflow_hub
+tensorflow
+langdetect
+sentencepiece
+tf-sentencepiece
+tensorflow_text
