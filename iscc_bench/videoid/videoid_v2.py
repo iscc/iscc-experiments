@@ -1,20 +1,31 @@
 # -*- coding: utf-8 -*-
-"""Extract and parse MPEG7 Video Signatures. Hash based on MPEG7 FARMES"""
+"""WIP
+Video-ID based on mpeg7 Coarse Signatures.
+
+Idea: The MPEG7 Video coarse signature is composed of 5 binary occurence histograms.
+Each of the histograms is 243 bits and a total of 1215 bits per 90 frames of video.
+Each signature overlaps by 45 Frames with the previous signature. We project each
+coarse signature to a 64bit similarty hash as follows: create a 64bit xxhash over
+27bit chunks of the occurence histograms (45 * 64bit integers). Create a simhash over
+the xxhashes.
+"""
 import random
 import subprocess
 import sys
 from os.path import basename, dirname, exists
+from pprint import pprint
 from statistics import mode
 from typing import Tuple
 import imageio_ffmpeg
 import iscc
+import xxhash
 from loguru import logger as log
 from lxml import etree
+
+from iscc_bench.algos.slide import sliding_window
 from iscc_bench.utils import cd
-from iscc_bench.videoid.const import WTA_PERMUTATIONS
 
 
-WTA_SEED = 10
 NSMAP = {
     "a": "urn:mpeg:mpeg7:schema:2001",
     "b": "http://www.w3.org/2001/XMLSchema-instance",
@@ -38,6 +49,23 @@ def get_frames(file, mc=0) -> Tuple:
             frames.append(tuple(int(t) for t in fs.split()))
     log.debug(f"Frames: {len(frames)}")
     return tuple(frames)
+
+
+def get_segments(file):
+    """Get Video Segment Signatures (90 Frames).
+
+    :param file: path to video file
+    :return: list of segment sigs (5 BagOfWords per segment concatenated to bitstrings)
+    """
+    segments = []
+    root = get_signature(file)
+    seg_els = root.xpath("//a:VSVideoSegment", namespaces=NSMAP)
+    for seg_el in seg_els:
+        # TODO Collect and Store Frame and Time Position
+        seg_sig = []
+        seg_bows = seg_el.xpath("./a:BagOfWords/text()", namespaces=NSMAP)
+        segments.append("".join(["".join(bow.split()) for bow in seg_bows]))
+    return segments
 
 
 def get_signature(file) -> etree.Element:
@@ -86,63 +114,37 @@ def get_crop(file) -> str:
     return mode(crops)
 
 
-def positional_sig(vec):
-    """creates positional signature from vector"""
-    return [(i, v) for i, v in enumerate(vec)]
-
-
-def wta_permutations(seed=WTA_SEED, vl=380, n=256) -> Tuple:
-    random.seed(seed)
-    perms = []
-    while len(perms) < n:
-        perm = (random.randint(0, vl - 1), random.randint(0, vl - 1))
-        if perm[0] != perm[1]:
-            perms.append(perm)
-    return tuple(perms)
-
-
-def wta_hash(vec, hl=64) -> bytes:
-    """Calculate hl-bit WTA Hash from vector."""
-    vl = len(vec)
-    perms = wta_permutations(WTA_SEED, vl, hl)
-    # perms = WTA_PERMUTATIONS
-    log.debug(f"WTA vec length: {vl}")
-    h = []
-    assert len(set(vec)) > 1, "Vector for wta_hash needs at least 2 different values."
-
-    def get_neq_vals(idxs):
-        vals = vec[idxs[0]], vec[idxs[1]]
-        while vals[0] == vals[1]:
-            idxs = idxs[0], (idxs[1] + 1) % vl
-            vals = vec[idxs[0]], vec[idxs[1]]
-        return vals
-
-    for idxs in perms:
-        vals = get_neq_vals(idxs)
-        h.append(vals.index(max(vals)))
-        if len(h) == hl:
-            break
-    h = bytes([int("".join(map(str, h[i : i + 8])), 2) for i in range(0, len(h), 8)])
-    log.debug(f"Hash length {len(h)}")
-    return h
-
-
 def sig_sum(sigs):
     return [sum(col) for col in zip(*sigs)]
 
 
+def segmet_to_simh(seg):
+    # print(seg)
+    hashes = []
+    for chunk in sliding_window(seg, 27, 27):
+        chunk_string = "".join(chunk)
+        # Skip all 0 strings
+        if not "1" in chunk_string:
+            continue
+        print(chunk_string)
+        hash_ = xxhash.xxh64_digest(chunk_string)
+        print(hash_.hex())
+        hashes.append(hash_)
+    # print([s.hex() for s in hashes])
+    result = iscc.similarity_hash(hashes)
+    return result
+
+
 def content_id_video(file, partial=False):
     log.debug(f"Processing {basename(file)}")
-    sigs = set(get_frames(file))
-    log.debug(f"Unique signatures {len(sigs)}")
-    hashsum = sig_sum(sigs)
-    log.debug(f"HashSum {len(hashsum)}:{hashsum}")
-    sh = wta_hash(hashsum, 64)
-    log.debug(f"Raw CID-V {len(sh) * 8}:{sh.hex()}")
+    segment_signatures = get_segments(file)
+    segment_simhashes = [segmet_to_simh(seg) for seg in segment_signatures]
+    print([s.hex() for s in segment_simhashes])
+    sh = iscc.similarity_hash(segment_simhashes)
     if partial:
-        content_id_video_digest = iscc.HEAD_CID_V_PCF + sh[:8]
+        content_id_video_digest = iscc.HEAD_CID_V_PCF + sh
     else:
-        content_id_video_digest = iscc.HEAD_CID_V + sh[:8]
+        content_id_video_digest = iscc.HEAD_CID_V + sh
     return iscc.encode(content_id_video_digest)
 
 
@@ -151,5 +153,5 @@ if __name__ == "__main__":
     p2 = "C:/Users/titusz/Code/iscc-experiments/iscc_bench/data/web_video/7_2_Y.flv"
     cidv1 = content_id_video(p1)
     cidv2 = content_id_video(p2)
-    print(WTA_SEED, cidv1, cidv2, "- Hamming Distance:", iscc.distance(cidv1, cidv2))
+    print(cidv1, cidv2, "- Hamming Distance:", iscc.distance(cidv1, cidv2))
     # pprint(wta_permutations())

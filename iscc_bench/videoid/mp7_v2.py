@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Extract and parse MPEG7 Video Signatures. Hash based on MPEG7 FARMES"""
+"""Extract and parse MPEG7 Video Signatures. Hash based on MPEG7 SEGEMENTS"""
 import random
 import subprocess
 import sys
@@ -21,23 +21,24 @@ NSMAP = {
 }
 
 
-def get_frames(file, mc=0) -> Tuple:
-    """Get frame signatures.
+def get_segments(file):
+    """Get Video Segment Signatures (90 Frames).
 
     :param file: path to video file
-    :param mc: filter for frame signatures with 'mc' minimum confidance
-    :return: tuple of frame signatures (380 values 0-2)
+    :return: 243 bit hash sum of bags of words per video segment
     """
-    frames = []
+    segments = []
     root = get_signature(file)
-    frame_els = root.xpath("//a:VideoFrame", namespaces=NSMAP)
-    for frame_el in frame_els:
-        fc = int(frame_el.xpath("./a:FrameConfidence/text()", namespaces=NSMAP)[0])
-        if fc >= mc:
-            fs = frame_el.xpath("./a:FrameSignature/text()", namespaces=NSMAP)[0]
-            frames.append(tuple(int(t) for t in fs.split()))
-    log.debug(f"Frames: {len(frames)}")
-    return tuple(frames)
+    seg_els = root.xpath("//a:VSVideoSegment", namespaces=NSMAP)
+    for seg_el in seg_els:
+        # TODO Collect and Store Frame and Time Position
+        seg_bows = seg_el.xpath("./a:BagOfWords/text()", namespaces=NSMAP)
+        bin_vecs = []
+        for seg_bow in seg_bows:
+            bin_vecs.append(tuple(int(s) for s in "".join(seg_bow.split())))
+        bow_sum = sig_sum(bin_vecs)
+        segments.append(bow_sum)
+    return segments
 
 
 def get_signature(file) -> etree.Element:
@@ -91,7 +92,7 @@ def positional_sig(vec):
     return [(i, v) for i, v in enumerate(vec)]
 
 
-def wta_permutations(seed=WTA_SEED, vl=380, n=256) -> Tuple:
+def wta_permutations(seed=WTA_SEED, vl=243, n=256) -> Tuple:
     random.seed(seed)
     perms = []
     while len(perms) < n:
@@ -128,13 +129,14 @@ def wta_hash(vec, hl=64) -> bytes:
 
 
 def sig_sum(sigs):
-    return [sum(col) for col in zip(*sigs)]
+    return tuple(sum(col) for col in zip(*sigs))
 
 
 def content_id_video(file, partial=False):
     log.debug(f"Processing {basename(file)}")
-    sigs = set(get_frames(file))
-    log.debug(f"Unique signatures {len(sigs)}")
+    segment_sigs = get_segments(file)
+    sigs = set(segment_sigs)
+    log.debug(f"Unique segment signatures {len(sigs)} of {len(segment_sigs)}")
     hashsum = sig_sum(sigs)
     log.debug(f"HashSum {len(hashsum)}:{hashsum}")
     sh = wta_hash(hashsum, 64)
