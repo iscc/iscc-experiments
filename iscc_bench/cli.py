@@ -13,8 +13,16 @@ def main():
 
 
 @click.command()
-@click.option('--reader', '-r', required=False, help='Reader (If no reader is given, all reader are parsed)', default=None)
-@click.option('--kill', '-k', required=False, type=bool, help='Reset old index', default=False)
+@click.option(
+    "--reader",
+    "-r",
+    required=False,
+    help="Reader (If no reader is given, all reader are parsed)",
+    default=None,
+)
+@click.option(
+    "--kill", "-k", required=False, type=bool, help="Reset old index", default=False
+)
 def load(reader, kill):
     """Populate ElasticSearch with given reader."""
 
@@ -31,13 +39,12 @@ def load(reader, kill):
             populate_elastic(reader_names[reader])
 
 
-
 main.add_command(load)
 
 
 @click.command()
-@click.option('--id_bits', type=int, help='Length of generated Meta-IDs', default=64)
-@click.option('--shingle_size', type=int, help='Shingle Size', default=4)
+@click.option("--id_bits", type=int, help="Length of generated Meta-IDs", default=64)
+@click.option("--shingle_size", type=int, help="Shingle Size", default=4)
 def build(id_bits, shingle_size):
     """Generate Meta-IDs for the Meta-Data."""
 

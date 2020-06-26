@@ -4,9 +4,10 @@
 See: https://stackoverflow.com/a/20316789/51627
 """
 
+
 def main():
     pass
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

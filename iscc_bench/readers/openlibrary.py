@@ -35,9 +35,9 @@ from iscc_bench import DATA_DIR, MetaData
 log = logging.getLogger(__name__)
 
 
-DATA_FILE = os.path.join(DATA_DIR, 'ol_dump_editions.txt.gz')
-DATA_FILE_AUTHORS = os.path.join(DATA_DIR, 'ol_dump_authors.txt.gz')
-INDEX_FILE_AUTHORS = os.path.join(DATA_DIR, 'ol_dump_authors.sqlite')
+DATA_FILE = os.path.join(DATA_DIR, "ol_dump_editions.txt.gz")
+DATA_FILE_AUTHORS = os.path.join(DATA_DIR, "ol_dump_authors.txt.gz")
+INDEX_FILE_AUTHORS = os.path.join(DATA_DIR, "ol_dump_authors.sqlite")
 
 
 def openlibrary(path=DATA_FILE):
@@ -49,23 +49,23 @@ def openlibrary(path=DATA_FILE):
 
     skipped = 0
     authors = get_or_build_author_index(INDEX_FILE_AUTHORS)
-    get_author_name = lambda ar: authors.get(ar['key'].split('/')[-1], '').strip()
+    get_author_name = lambda ar: authors.get(ar["key"].split("/")[-1], "").strip()
 
-    for line in iter_gz_lines(path, filter='isbn'):
-        data = json.loads(line.split('\t')[4])
-        raw_isbns = data.get('isbn_13') or data.get('isbn_10')
+    for line in iter_gz_lines(path, filter="isbn"):
+        data = json.loads(line.split("\t")[4])
+        raw_isbns = data.get("isbn_13") or data.get("isbn_10")
         if raw_isbns:
             try:
-                title = data['title'].split(' : ')[0]
+                title = data["title"].split(" : ")[0]
             except KeyError:
-                log.debug('Skip entry (no title): {}'.format(data))
+                log.debug("Skip entry (no title): {}".format(data))
                 skipped += 1
                 continue
 
-            author = ';'.join([get_author_name(ar) for ar in data.get('authors', [])])
+            author = ";".join([get_author_name(ar) for ar in data.get("authors", [])])
 
             if not author.strip():
-                log.debug('Skip entry (no author): {}'.format(data))
+                log.debug("Skip entry (no author): {}".format(data))
                 skipped += 1
                 continue
 
@@ -75,7 +75,7 @@ def openlibrary(path=DATA_FILE):
                     meta = MetaData(isbn13, title, author)
                     yield meta
 
-    log.info('Openlibrary skipped {} entries.'.format(skipped))
+    log.info("Openlibrary skipped {} entries.".format(skipped))
 
 
 def get_or_build_author_index(index_file=INDEX_FILE_AUTHORS):
@@ -84,7 +84,11 @@ def get_or_build_author_index(index_file=INDEX_FILE_AUTHORS):
     :param str index_file: path to persistent index file (sqlite)
     :return: SqliteDict
     """
-    return SqliteDict(index_file,  flag='r') if os.path.exists(INDEX_FILE_AUTHORS) else index_authors()
+    return (
+        SqliteDict(index_file, flag="r")
+        if os.path.exists(INDEX_FILE_AUTHORS)
+        else index_authors()
+    )
 
 
 def index_authors(data_file=DATA_FILE_AUTHORS, index_file=INDEX_FILE_AUTHORS):
@@ -98,41 +102,41 @@ def index_authors(data_file=DATA_FILE_AUTHORS, index_file=INDEX_FILE_AUTHORS):
     indexed = 0
     authors_idx = SqliteDict(index_file, autocommit=False)
 
-    log.info('Indexing authors (~6 Million)')
+    log.info("Indexing authors (~6 Million)")
 
     for line in iter_gz_lines(data_file):
 
-        data = json.loads(line.split('\t')[4])
-        key = data['key'].split('/')[-1]
+        data = json.loads(line.split("\t")[4])
+        key = data["key"].split("/")[-1]
         author_name = (
-            data.get('name') or
-            data.get('personal_name') or
-            data.get('fuller_name') or
-            data.get('alternate_name')
+            data.get("name")
+            or data.get("personal_name")
+            or data.get("fuller_name")
+            or data.get("alternate_name")
         )
 
         if not author_name:
-            log.debug('No author name: {}'.format(data))
+            log.debug("No author name: {}".format(data))
             continue
 
         authors_idx[key] = author_name.strip()
 
         indexed += 1
         if not indexed % 1000000:
-            log.info('Indexed {:,} authors'.format(indexed))
+            log.info("Indexed {:,} authors".format(indexed))
 
     authors_idx.commit()
-    log.info('Indexed {:,} authors'.format(len(authors_idx)))
+    log.info("Indexed {:,} authors".format(len(authors_idx)))
 
     return authors_idx
 
 
-def iter_gz_lines(path=DATA_FILE, encoding='utf-8', filter=None):
+def iter_gz_lines(path=DATA_FILE, encoding="utf-8", filter=None):
     """Iterate over lines from .gz compressed textfile.
     :param str filter: Only yield lines that contain this string
     :return: Generator[str]
     """
-    with gzip.open(path, 'rt', encoding=encoding) as gzfile:
+    with gzip.open(path, "rt", encoding=encoding) as gzfile:
         for line in gzfile:
             if filter:
                 if filter in line:
@@ -149,7 +153,7 @@ def count_records():
     return i + 1
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     # log_format = '%(asctime)s - %(levelname)s - %(message)s'
     # logging.basicConfig(level=logging.DEBUG, format=log_format)
 

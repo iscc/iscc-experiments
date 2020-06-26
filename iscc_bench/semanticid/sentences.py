@@ -8,9 +8,9 @@ from syntok import segmenter
 
 
 def main():
-    for fp in gutenberg('de'):
+    for fp in gutenberg("de"):
         log.info(basename(fp))
-        doc = open(fp, 'rt', encoding='UTF-8').read()
+        doc = open(fp, "rt", encoding="UTF-8").read()
         log.info(doc.strip()[:200])
         for para in segmenter.analyze(doc):
             p = []
@@ -18,11 +18,11 @@ def main():
                 s = []
                 for tok in sent:
                     s.extend([tok.spacing, tok.value])
-                fs = ''.join(s)
+                fs = "".join(s)
                 log.info(fs)
                 p.append(fs)
-            log.info('PARAGRAPH BREAK')
+            log.info("PARAGRAPH BREAK")
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

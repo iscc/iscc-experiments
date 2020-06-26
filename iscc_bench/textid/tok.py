@@ -9,7 +9,7 @@ from iscc_bench.readers.gutenberg import gutenberg
 
 
 def split_ref(file_path):
-    text = open(file_path, encoding='UTF8').read()
+    text = open(file_path, encoding="UTF8").read()
 
     # 1. Pre-normalize
     text = iscc.text_pre_normalize(text)
@@ -22,7 +22,8 @@ def split_ref(file_path):
 
     # 4. Create 5 word shingles
     shingles = [
-        '\u0020'.join(l) for l in iscc.sliding_window(w, iscc.WINDOW_SIZE_CID_T)]
+        "\u0020".join(l) for l in iscc.sliding_window(w, iscc.WINDOW_SIZE_CID_T)
+    ]
     return shingles
 
 
@@ -42,10 +43,11 @@ def evaluate():
         print(len(c), c[2000:2003])
         a_b = containment(a, b)
         a_c = containment(a, c)
-        print(f'Recall: {a_b}, Disc {a_c}', end='\n\n')
+        print(f"Recall: {a_b}, Disc {a_c}", end="\n\n")
         cont_sim.append(a_b)
         cont_dis.append(a_c)
-    print(f'AVG Sim {mean(cont_sim)}, AVG Dis {mean(cont_dis)}')
+    print(f"AVG Sim {mean(cont_sim)}, AVG Dis {mean(cont_dis)}")
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     evaluate()

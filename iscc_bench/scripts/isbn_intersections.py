@@ -10,8 +10,10 @@ def print_data_source_intersections():
         a_isbns = set(load_isbns(combo[0]))
         b_isbns = set(load_isbns(combo[1]))
         matches = a_isbns.intersection(b_isbns)
-        print('{} identical isbns in {}/{}'.format(
-            len(matches), combo[0].__name__, combo[1].__name__)
+        print(
+            "{} identical isbns in {}/{}".format(
+                len(matches), combo[0].__name__, combo[1].__name__
+            )
         )
 
 
@@ -20,26 +22,26 @@ def dump_isbns(rebuild=False):
     readers = [r() for r in ALL_READERS]
     for reader in readers:
         name = reader.__name__
-        fp = os.path.join(iscc_bench.DATA_DIR, name + '.isbns')
+        fp = os.path.join(iscc_bench.DATA_DIR, name + ".isbns")
         if not rebuild and os.path.exists(fp):
-            print('Skip existing {}.isbns'.format(name))
+            print("Skip existing {}.isbns".format(name))
             continue
 
-        print('######### Dumping {}.isbns'.format(name))
-        with open(fp, 'w') as outf:
+        print("######### Dumping {}.isbns".format(name))
+        with open(fp, "w") as outf:
             for entry in reader:
                 if entry.isbn:
-                    outf.write('{}\n'.format(entry.isbn))
+                    outf.write("{}\n".format(entry.isbn))
 
 
 def load_isbns(reader):
 
-    if hasattr(reader, '__name__'):
+    if hasattr(reader, "__name__"):
         name = reader.__name__
     else:
         name = reader
 
-    fp = os.path.join(iscc_bench.DATA_DIR, name + '.isbns')
+    fp = os.path.join(iscc_bench.DATA_DIR, name + ".isbns")
     with open(fp) as f:
         return [int(line.strip()) for line in f]
 
@@ -47,7 +49,7 @@ def load_isbns(reader):
 def print_isbn_stats():
     from terminaltables import AsciiTable
 
-    data = [['Reader', 'Total ISBNs', 'Unique ISBNs']]
+    data = [["Reader", "Total ISBNs", "Unique ISBNs"]]
 
     for reader in ALL_READERS:
         isbns = load_isbns(reader)
@@ -78,32 +80,33 @@ def build_metadata_pairs(samples=100):
     """
     from itertools import cycle
     import gc
+
     gc.enable()
 
     combos = [c for c in combinations(ALL_READERS, 2)]
-    samples_per_combo = int(samples/len(combos))
+    samples_per_combo = int(samples / len(combos))
     print("Creating ~%s samples per data source pair" % samples_per_combo)
 
-    fp = os.path.join(iscc_bench.DATA_DIR, 'metapairs_%s.sample' % samples)
+    fp = os.path.join(iscc_bench.DATA_DIR, "metapairs_%s.sample" % samples)
     total_samples = 0
     seen_isbns = set()
 
-    with open(fp, 'wb') as outf:
+    with open(fp, "wb") as outf:
         for combo in combos:
             gc.collect()
-            combo_name = '%s-%s' % (combo[0].__name__, combo[1].__name__)
+            combo_name = "%s-%s" % (combo[0].__name__, combo[1].__name__)
             a_isbns = set(load_isbns(combo[0]))
             b_isbns = set(load_isbns(combo[1]))
             relevant_isbns = a_isbns.intersection(b_isbns)
             data = {}
             counter = 0
             reader_combo = cycle((combo[0](), combo[1]()))
-            print('Collecting %s combo' % combo_name)
+            print("Collecting %s combo" % combo_name)
             for reader in reader_combo:
                 try:
                     entry = next(reader)
                 except StopIteration:
-                    print('!!!! StopIteration')
+                    print("!!!! StopIteration")
                     break
 
                 isbn = int(entry.isbn)
@@ -112,48 +115,52 @@ def build_metadata_pairs(samples=100):
                     title = entry.title
                     author = entry.author
                     if isbn not in data:
-                        data[isbn] = {'title': title, 'author': author}
+                        data[isbn] = {"title": title, "author": author}
                         continue
-                    if title != data[isbn]['title'] or author != data[isbn]['author']:
+                    if title != data[isbn]["title"] or author != data[isbn]["author"]:
                         row = data[isbn]
-                        out_data = '{}|{}|{}|{}|{}\n'.format(
+                        out_data = "{}|{}|{}|{}|{}\n".format(
                             isbn,
-                            row['title'].replace('|', ''),
-                            row['author'].replace('|', ''),
-                            title.replace('|', ''),
-                            author.replace('|', ''),
+                            row["title"].replace("|", ""),
+                            row["author"].replace("|", ""),
+                            title.replace("|", ""),
+                            author.replace("|", ""),
                         )
                         print(out_data)
-                        outf.write(out_data.encode('utf-8'))
+                        outf.write(out_data.encode("utf-8"))
                         seen_isbns.add(isbn)
                         total_samples += 1
                         relevant_isbns.remove(isbn)
                         del data[isbn]
                         if counter == samples_per_combo:
-                            print('Finished samples for %s' % combo_name)
+                            print("Finished samples for %s" % combo_name)
                             break
                         if not relevant_isbns:
-                            print('Out of relevant ISBNs at %s samples for %s', (counter, combo_name))
+                            print(
+                                "Out of relevant ISBNs at %s samples for %s",
+                                (counter, combo_name),
+                            )
                             break
                         counter += 1
-    print('Collected %s total samples' % total_samples)
+    print("Collected %s total samples" % total_samples)
 
 
 def clean_dupes():
-    fp = os.path.join(iscc_bench.DATA_DIR, 'metapairs_100000.sample')
+    fp = os.path.join(iscc_bench.DATA_DIR, "metapairs_100000.sample")
     seen_isbns = set()
     wrote = 0
-    with open(fp, encoding='UTF-8') as infile:
-        with open(fp + '.clean', 'w', encoding='UTF-8') as outfile:
+    with open(fp, encoding="UTF-8") as infile:
+        with open(fp + ".clean", "w", encoding="UTF-8") as outfile:
             for line in infile:
                 isbn = line[:13]
                 if isbn not in seen_isbns:
                     outfile.write(line)
                     wrote += 1
                 seen_isbns.add(isbn)
-    print('Wrote %s lines.' % wrote)
+    print("Wrote %s lines." % wrote)
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     # dump_isbns()
     # print_isbn_stats()
     # print('Total all intersecting isbns: {}'.format(len(get_intersecting_isbns())))

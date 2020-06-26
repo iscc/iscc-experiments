@@ -23,7 +23,7 @@ from iscc_bench import DATA_DIR, MetaData
 log = logging.getLogger(__name__)
 
 
-HARVARD_DATA = os.path.join(DATA_DIR, 'harvard')
+HARVARD_DATA = os.path.join(DATA_DIR, "harvard")
 
 
 def harvard(path=HARVARD_DATA):
@@ -38,10 +38,10 @@ def harvard(path=HARVARD_DATA):
             # Basic cleanup
             try:
                 isbn = isbnlib.to_isbn13(meta.isbn)
-                title = meta.title.strip('/').strip().split(' : ')[0]
+                title = meta.title.strip("/").strip().split(" : ")[0]
                 cleaned = MetaData(isbn, title, meta.author)
             except Exception:
-                log.exception('Error parsing data')
+                log.exception("Error parsing data")
                 continue
 
             log.debug(cleaned)
@@ -59,7 +59,7 @@ def marc21_dir_reader(path=HARVARD_DATA):
     for marc21_file_name in os.listdir(path):
 
         marc21_file_path = os.path.join(path, marc21_file_name)
-        log.info('Reading harvard marc21 file: {}'.format(marc21_file_name))
+        log.info("Reading harvard marc21 file: {}".format(marc21_file_name))
 
         for meta_record in marc21_file_reader(marc21_file_path):
             yield meta_record
@@ -72,9 +72,9 @@ def marc21_file_reader(file_path):
     :return: Generator[:class:`MetaData`]
     """
 
-    with open(file_path, 'rb') as mf:
+    with open(file_path, "rb") as mf:
 
-        reader = MARCReader(mf, utf8_handling='ignore')
+        reader = MARCReader(mf, utf8_handling="ignore")
 
         while True:
             try:
@@ -87,7 +87,7 @@ def marc21_file_reader(file_path):
                 break
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     """Demo usage."""
 
     # logging.basicConfig(level=logging.DEBUG)

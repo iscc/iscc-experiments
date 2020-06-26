@@ -36,7 +36,7 @@ hash_funcs = (
     cv.img_hash.blockMeanHash,
     cv.img_hash.colorMomentHash,
     cv.img_hash.marrHildrethHash,
-    cv.img_hash.radialVarianceHash
+    cv.img_hash.radialVarianceHash,
 )
 
 
@@ -51,7 +51,7 @@ def speed():
             img = cv.imread(img_path)
             ih = hfunc(img)
         end = time.time()
-        print(f'Runtime {end - start} for {hfunc.__name__}')
+        print(f"Runtime {end - start} for {hfunc.__name__}")
 
 
 def collisions():
@@ -72,12 +72,12 @@ def collisions():
                 matches += 1
             ncol.append(len(v))
         print(
-            f'\n{hfunc.__name__}: '
-            f'Collisions: {matches} - '
-            f'Mean: {mean(ncol)} - '
-            f'Median: {median(ncol)} - '
-            f'Min {min(ncol)} - '
-            f'Max {max(ncol)}'
+            f"\n{hfunc.__name__}: "
+            f"Collisions: {matches} - "
+            f"Mean: {mean(ncol)} - "
+            f"Median: {median(ncol)} - "
+            f"Min {min(ncol)} - "
+            f"Max {max(ncol)}"
         )
 
 
@@ -101,7 +101,7 @@ def compat():
     print(list(bytearray.fromhex(str(phash_ih))))
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     speed()
     collisions()
     compat()

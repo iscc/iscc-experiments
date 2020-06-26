@@ -32,7 +32,7 @@ from iscc_bench.utils import load_text_file
 
 
 def chunkify(text):
-    return [''.join(c) for c in sliding_window(text, 13)]
+    return ["".join(c) for c in sliding_window(text, 13)]
 
 
 def featurize(chunks):
@@ -68,26 +68,26 @@ def main():
         sim192_errs_ref.append(abs(sim_sim - mh192_sim_sim))
 
     print(
-        f'Minhash Vector:'
-        f'Error Sim Mean {mean(sim_errs_ref)} - '
-        f'Max {max(sim_errs_ref)} - '
-        f'Var {variance(sim_errs_ref)}\n'
+        f"Minhash Vector:"
+        f"Error Sim Mean {mean(sim_errs_ref)} - "
+        f"Max {max(sim_errs_ref)} - "
+        f"Var {variance(sim_errs_ref)}\n"
     )
 
     print(
-        f'Minhash 192 bit:'
-        f'Error Sim Mean {mean(sim192_errs_ref)} - '
-        f'Max {max(sim192_errs_ref)} - '
-        f'Var {variance(sim192_errs_ref)}\n'
+        f"Minhash 192 bit:"
+        f"Error Sim Mean {mean(sim192_errs_ref)} - "
+        f"Max {max(sim192_errs_ref)} - "
+        f"Var {variance(sim192_errs_ref)}\n"
     )
 
     print(
-        f'Minhash 64 bit:'
-        f'Error Sim Mean {mean(sim64_errs_ref)} - '
-        f'Max {max(sim64_errs_ref)} - '
-        f'Var {variance(sim64_errs_ref)}\n'
+        f"Minhash 64 bit:"
+        f"Error Sim Mean {mean(sim64_errs_ref)} - "
+        f"Max {max(sim64_errs_ref)} - "
+        f"Var {variance(sim64_errs_ref)}\n"
     )
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

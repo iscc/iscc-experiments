@@ -3,16 +3,30 @@
 import unicodedata
 from iscc_bench.textid.const import UNICODE_RANGES
 
-NFORM = 'NFD'  # Unicode Normalization form
-LOWER = True   # Make all text lowercase
+NFORM = "NFD"  # Unicode Normalization form
+LOWER = True  # Make all text lowercase
 
 # Unicode categories to remove during text normalization
-FILTR = frozenset({
-    'Cc', 'Cf', 'Cn', 'Co', 'Cs',
-    'Mc', 'Me', 'Mn',
-    'Pc', 'Pd', 'Pe', 'Pf', 'Pi', 'Po', 'Ps',
-    # 'Zl', 'Zp', 'Zs',
-})
+FILTR = frozenset(
+    {
+        "Cc",
+        "Cf",
+        "Cn",
+        "Co",
+        "Cs",
+        "Mc",
+        "Me",
+        "Mn",
+        "Pc",
+        "Pd",
+        "Pe",
+        "Pf",
+        "Pi",
+        "Po",
+        "Ps",
+        # 'Zl', 'Zp', 'Zs',
+    }
+)
 
 
 def chars():
@@ -36,9 +50,9 @@ def text_normalize(text: str, keep_ws: bool = False) -> str:
     text = text.translate(TR_TABLE)
 
     if keep_ws:
-        text = ' '.join(text.split())
+        text = " ".join(text.split())
     else:
-        text = ''.join(text.split())
+        text = "".join(text.split())
 
     return text
 
@@ -54,13 +68,13 @@ def text_normalize_simple(text: str, keep_ws: bool = False) -> str:
         if cat not in FILTR:
             chars.append(c)
 
-    text = ''.join(chars)
+    text = "".join(chars)
     print(text)
 
     if keep_ws:
-        text = ' '.join(text.split())
+        text = " ".join(text.split())
     else:
-        text = ''.join(text.split())
+        text = "".join(text.split())
 
     return text
 
@@ -73,8 +87,8 @@ Optional remove all whitespace
 """
 
 
-if __name__ == '__main__':
-    text = '  Iñtërnâtiôn\nàlizætiøn☃💩 –  is a tric\t ky \u00A0 thing!\r'
+if __name__ == "__main__":
+    text = "  Iñtërnâtiôn\nàlizætiøn☃💩 –  is a tric\t ky \u00A0 thing!\r"
 
     norm = text_normalize(text, keep_ws=False)
     norms = text_normalize_simple(text, keep_ws=False)
@@ -88,5 +102,4 @@ if __name__ == '__main__':
     print(norms_kws)
     assert norm_kws == norms_kws
 
-    print(text_normalize_simple('Hello\nWorld', keep_ws=True))
-
+    print(text_normalize_simple("Hello\nWorld", keep_ws=True))

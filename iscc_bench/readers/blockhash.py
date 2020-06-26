@@ -38,7 +38,7 @@ def translate_blocks_to_bits(blocks, pixels_per_block):
     # Compare medians across four horizontal bands
     bandsize = len(blocks) // 4
     for i in range(4):
-        m = median(blocks[i * bandsize: (i + 1) * bandsize])
+        m = median(blocks[i * bandsize : (i + 1) * bandsize])
         for j in range(i * bandsize, (i + 1) * bandsize):
             v = blocks[j]
 
@@ -52,18 +52,18 @@ def translate_blocks_to_bits(blocks, pixels_per_block):
 
 
 def bits_to_hexhash(bits):
-    return '{0:0={width}x}'.format(
-        int(''.join([str(x) for x in bits]), 2), width=len(bits) // 4
+    return "{0:0={width}x}".format(
+        int("".join([str(x) for x in bits]), 2), width=len(bits) // 4
     )
 
 
 def blockhash_even(im, bits):
-    if im.mode == 'RGBA':
+    if im.mode == "RGBA":
         total_value = total_value_rgba
-    elif im.mode == 'RGB':
+    elif im.mode == "RGB":
         total_value = total_value_rgb
     else:
-        raise RuntimeError('Unsupported image mode: {}'.format(im.mode))
+        raise RuntimeError("Unsupported image mode: {}".format(im.mode))
 
     data = im.getdata()
     width, height = im.size
@@ -89,12 +89,12 @@ def blockhash_even(im, bits):
 
 
 def blockhash(im, bits):
-    if im.mode == 'RGBA':
+    if im.mode == "RGBA":
         total_value = total_value_rgba
-    elif im.mode == 'RGB':
+    elif im.mode == "RGB":
         total_value = total_value_rgb
     else:
-        raise RuntimeError('Unsupported image mode: {}'.format(im.mode))
+        raise RuntimeError("Unsupported image mode: {}".format(im.mode))
 
     data = im.getdata()
     width, height = im.size
@@ -118,7 +118,7 @@ def blockhash(im, bits):
         else:
             y_frac, y_int = math.modf((y + 1) % block_height)
 
-            weight_top = (1 - y_frac)
+            weight_top = 1 - y_frac
             weight_bottom = y_frac
 
             # y_int will be 0 on bottom/right borders and on block boundaries
@@ -126,7 +126,9 @@ def blockhash(im, bits):
                 block_top = block_bottom = int(y // block_height)
             else:
                 block_top = int(y // block_height)
-                block_bottom = int(-(-y // block_height))  # int(math.ceil(float(y) / block_height))
+                block_bottom = int(
+                    -(-y // block_height)
+                )  # int(math.ceil(float(y) / block_height))
 
         for x in range(width):
             value = total_value(im, data, x, y)
@@ -138,7 +140,7 @@ def blockhash(im, bits):
             else:
                 x_frac, x_int = math.modf((x + 1) % block_width)
 
-                weight_left = (1 - x_frac)
+                weight_left = 1 - x_frac
                 weight_right = x_frac
 
                 # x_int will be 0 on bottom/right borders and on block boundaries
@@ -146,7 +148,9 @@ def blockhash(im, bits):
                     block_left = block_right = int(x // block_width)
                 else:
                     block_left = int(x // block_width)
-                    block_right = int(-(-x // block_width))  # int(math.ceil(float(x) / block_width))
+                    block_right = int(
+                        -(-x // block_width)
+                    )  # int(math.ceil(float(x) / block_width))
 
             # add weighted pixel value to relevant blocks
             blocks[block_top][block_left] += value * weight_top * weight_left

@@ -65,22 +65,22 @@ def minhash_ref_opt(features_32):
     mersenne_prime = (1 << 61) - 1
     max_hash = (1 << 32) - 1
     perms = [*zip(*MINHASH_PERMUTATIONS)]
-    return [min(
-            (((a * f + b) & max_int64) % mersenne_prime) & max_hash
-            for f in features_32
-    ) for a, b in perms[:128]]
+    return [
+        min(
+            (((a * f + b) & max_int64) % mersenne_prime) & max_hash for f in features_32
+        )
+        for a, b in perms[:128]
+    ]
 
 
 def minhash_ref_np(features_32):
     _mersenne_prime = (1 << 61) - 1
     _max_hash = (1 << 32) - 1
-    _hash_range = (1 << 32)
+    _hash_range = 1 << 32
 
     hashvalues = np.ones(128, dtype=np.uint64) * _max_hash
     a, b = np.array(
-        [MINHASH_PERMUTATIONS[0][:128],
-         MINHASH_PERMUTATIONS[1][:128]],
-        dtype=np.uint64
+        [MINHASH_PERMUTATIONS[0][:128], MINHASH_PERMUTATIONS[1][:128]], dtype=np.uint64
     )
     for hv in features_32:
         phv = np.bitwise_and((a * hv + b) % _mersenne_prime, np.uint64(_max_hash))
@@ -89,10 +89,8 @@ def minhash_ref_np(features_32):
 
 
 PERMS_NUMBA = np.array(
-        [MINHASH_PERMUTATIONS[0][:128],
-         MINHASH_PERMUTATIONS[1][:128]],
-        dtype=np.uint64
-    )
+    [MINHASH_PERMUTATIONS[0][:128], MINHASH_PERMUTATIONS[1][:128]], dtype=np.uint64
+)
 
 
 @njit
@@ -154,10 +152,9 @@ def minhash_xor_192(features_32, masks=PERMS_192_NP):
 
 
 PERMS_192 = np.array(
-        [MINHASH_PERMUTATIONS[0][:192],
-         MINHASH_PERMUTATIONS[1][:192]],
-        dtype=np.uint64
-    )
+    [MINHASH_PERMUTATIONS[0][:192], MINHASH_PERMUTATIONS[1][:192]], dtype=np.uint64
+)
+
 
 @njit
 def minhash_ref_192(features_32):
@@ -201,26 +198,22 @@ funcs_f32 = (
 def compat():
     """Test compatibility of implementations"""
     features_32 = np.array(
-        [xxh32_intdigest(rand.bytes(13)) for _ in range(100)],
-        dtype=np.uint32
+        [xxh32_intdigest(rand.bytes(13)) for _ in range(100)], dtype=np.uint32
     )
     results = set()
-    print('\nTesting minhash reference compatibility:\n')
+    print("\nTesting minhash reference compatibility:\n")
     for func in funcs_ref:
         r = tuple(func(features_32))
-        print(f'{func.__name__:<18}: {r}')
+        print(f"{func.__name__:<18}: {r}")
         results.add(r)
     assert len(results) == 1
 
-    s = np.array(
-        [xxh64_intdigest(rand.bytes(13)) for _ in range(100)],
-        dtype=np.uint64
-    )
+    s = np.array([xxh64_intdigest(rand.bytes(13)) for _ in range(100)], dtype=np.uint64)
     results = set()
-    print('\nTesting minhash xor compatibility:\n')
+    print("\nTesting minhash xor compatibility:\n")
     for func in funcs_xor:
         r = tuple(func(s))
-        print(f'{func.__name__:<18}: {r}')
+        print(f"{func.__name__:<18}: {r}")
         results.add(r)
     # assert len(results) == 1
 
@@ -239,12 +232,11 @@ def performance():
         minhash_xor_numba :   11.97 ms runtime
     """
     nfeat = 10000
-    print(f'\nTesting minhash performance with {nfeat} features:\n')
+    print(f"\nTesting minhash performance with {nfeat} features:\n")
 
     # Reference
     features_32 = np.array(
-        [xxh32_intdigest(rand.bytes(13)) for _ in range(nfeat)],
-        dtype=np.uint32
+        [xxh32_intdigest(rand.bytes(13)) for _ in range(nfeat)], dtype=np.uint32
     )
     for func in funcs_f32:
         mh = func(features_32)
@@ -252,12 +244,11 @@ def performance():
         mh = func(features_32)
         end = time.time()
         rt = (end - start) * 1000
-        print(f'{func.__name__:<18}: {rt:.2f} ms runtime')
+        print(f"{func.__name__:<18}: {rt:.2f} ms runtime")
 
     # New versions
     features_64 = np.array(
-        [xxh64_intdigest(rand.bytes(13)) for _ in range(nfeat)],
-        dtype=np.uint64
+        [xxh64_intdigest(rand.bytes(13)) for _ in range(nfeat)], dtype=np.uint64
     )
 
     for func in funcs_xor:
@@ -266,16 +257,16 @@ def performance():
         mh = func(features_64)
         end = time.time()
         rt = (end - start) * 1000
-        print(f'{func.__name__:<18}: {rt:.2f} ms runtime')
+        print(f"{func.__name__:<18}: {rt:.2f} ms runtime")
 
 
 def quality(seed=298):
-    print('\nTesting minhash quality:\n')
+    print("\nTesting minhash quality:\n")
 
     fps = list(chain(gutenberg(), mltext()))
 
     def chunkify(text):
-        return [''.join(c) for c in sliding_window(text, 13)]
+        return ["".join(c) for c in sliding_window(text, 13)]
 
     def hashify_32(chunks):
         return np.array([xxh32_intdigest(f) for f in chunks], np.uint32)
@@ -302,13 +293,13 @@ def quality(seed=298):
         sim_errs_ref.append(abs(sim_sim - mh_sim_sim))
         dis_errs_ref.append(abs(sim_dis - mh_sim_dis))
     print(
-        f'minhash xor 64: '
-        f'Error Sim Mean {mean(sim_errs_ref)} - '
-        f'Max {max(sim_errs_ref)} - '
-        f'Var {variance(sim_errs_ref)} | '
-        f'Error Dis Mean {mean(dis_errs_ref)} - '
-        f'Max {max(dis_errs_ref)} - '
-        f'Var {variance(dis_errs_ref)}'
+        f"minhash xor 64: "
+        f"Error Sim Mean {mean(sim_errs_ref)} - "
+        f"Max {max(sim_errs_ref)} - "
+        f"Var {variance(sim_errs_ref)} | "
+        f"Error Dis Mean {mean(dis_errs_ref)} - "
+        f"Max {max(dis_errs_ref)} - "
+        f"Var {variance(dis_errs_ref)}"
     )
 
     # Minhash Ref 64
@@ -330,13 +321,13 @@ def quality(seed=298):
         sim_errs_ref.append(abs(sim_sim - mh_sim_sim))
         dis_errs_ref.append(abs(sim_dis - mh_sim_dis))
     print(
-        f'minhash ref 64: '
-        f'Error Sim Mean {mean(sim_errs_ref)} - '
-        f'Max {max(sim_errs_ref)} - '
-        f'Var {variance(sim_errs_ref)} | '
-        f'Error Dis Mean {mean(dis_errs_ref)} - '
-        f'Max {max(dis_errs_ref)} - '
-        f'Var {variance(dis_errs_ref)}'
+        f"minhash ref 64: "
+        f"Error Sim Mean {mean(sim_errs_ref)} - "
+        f"Max {max(sim_errs_ref)} - "
+        f"Var {variance(sim_errs_ref)} | "
+        f"Error Dis Mean {mean(dis_errs_ref)} - "
+        f"Max {max(dis_errs_ref)} - "
+        f"Var {variance(dis_errs_ref)}"
     )
 
     # Minhash Ref 192
@@ -358,17 +349,17 @@ def quality(seed=298):
         sim_errs_ref.append(abs(sim_sim - mh_sim_sim))
         dis_errs_ref.append(abs(sim_dis - mh_sim_dis))
     print(
-        f'minhash ref 192: '
-        f'Error Sim Mean {mean(sim_errs_ref)} - '
-        f'Max {max(sim_errs_ref)} - '
-        f'Var {variance(sim_errs_ref)} | '
-        f'Error Dis Mean {mean(dis_errs_ref)} - '
-        f'Max {max(dis_errs_ref)} - '
-        f'Var {variance(dis_errs_ref)}'
+        f"minhash ref 192: "
+        f"Error Sim Mean {mean(sim_errs_ref)} - "
+        f"Max {max(sim_errs_ref)} - "
+        f"Var {variance(sim_errs_ref)} | "
+        f"Error Dis Mean {mean(dis_errs_ref)} - "
+        f"Max {max(dis_errs_ref)} - "
+        f"Var {variance(dis_errs_ref)}"
     )
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     compat()
     performance()
     quality(298)

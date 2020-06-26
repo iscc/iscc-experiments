@@ -15,9 +15,11 @@ import tarfile
 from iscc_bench import DATA_DIR
 from iscc_bench.readers import utils
 
-DOWNLOAD_URL = "http://www.vision.caltech.edu/Image_Datasets/Caltech256/256_ObjectCategories.tar"
-DATA_PATH = os.path.join(DATA_DIR, 'caltech256')
-DATA_FILE_PATH = os.path.join(DATA_PATH, '256_ObjectCategories.tar')
+DOWNLOAD_URL = (
+    "http://www.vision.caltech.edu/Image_Datasets/Caltech256/256_ObjectCategories.tar"
+)
+DATA_PATH = os.path.join(DATA_DIR, "caltech256")
+DATA_FILE_PATH = os.path.join(DATA_PATH, "256_ObjectCategories.tar")
 
 log = logging.getLogger(__name__)
 
@@ -27,33 +29,34 @@ def caltech_256():
 
     try:
         os.makedirs(DATA_PATH)
-        log.info('Created data directory: {}'.format(DATA_PATH))
+        log.info("Created data directory: {}".format(DATA_PATH))
     except FileExistsError:
         pass
 
     if not os.path.exists(DATA_FILE_PATH):
-        log.info('Downloading image data: {}'.format(DATA_FILE_PATH))
+        log.info("Downloading image data: {}".format(DATA_FILE_PATH))
         utils.download(DOWNLOAD_URL, DATA_FILE_PATH)
 
-        log.info('Unpacking image data: {}'.format(DATA_FILE_PATH))
+        log.info("Unpacking image data: {}".format(DATA_FILE_PATH))
         with tarfile.open(DATA_FILE_PATH) as tar:
             tar.extractall(DATA_PATH)
 
-    for fp in utils.iter_files(DATA_PATH, exts=['jpg'], recursive=True):
+    for fp in utils.iter_files(DATA_PATH, exts=["jpg"], recursive=True):
         yield fp
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     from hashlib import sha1
-    log_format = '%(asctime)s - %(levelname)s - %(message)s'
+
+    log_format = "%(asctime)s - %(levelname)s - %(message)s"
     logging.basicConfig(level=logging.INFO, format=log_format)
 
     sigs = {}
-    log.info('check caltech256 for exact duplicate images')
+    log.info("check caltech256 for exact duplicate images")
     for image_path in caltech_256():
-        sig = sha1(open(image_path, 'rb').read()).hexdigest()
+        sig = sha1(open(image_path, "rb").read()).hexdigest()
         if sig not in sigs:
             sigs[sig] = image_path
         else:
-            print('{} -> {}'.format(image_path, sigs[sig]))
-    log.info('done checking caltech256 for exact duplicate images')
+            print("{} -> {}".format(image_path, sigs[sig]))
+    log.info("done checking caltech256 for exact duplicate images")

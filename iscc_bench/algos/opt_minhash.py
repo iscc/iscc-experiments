@@ -36,11 +36,14 @@ MAX_HASH = (1 << 32) - 1
 
 PERMUTATIONS = np.array(
     [
-        (R.randint(1, MERSENNE_PRIME, dtype=np.uint64),
-         R.randint(0, MERSENNE_PRIME, dtype=np.uint64))
+        (
+            R.randint(1, MERSENNE_PRIME, dtype=np.uint64),
+            R.randint(0, MERSENNE_PRIME, dtype=np.uint64),
+        )
         for _ in range(64)
     ],
-    dtype=np.uint64).T
+    dtype=np.uint64,
+).T
 
 PERMUTATIONS[0] = np.bitwise_or(PERMUTATIONS[0], 1)
 
@@ -60,7 +63,7 @@ def minhash_uvh(features):
 
 
 def featurize(text):
-    return [''.join(c).encode('utf8') for c in sliding_window(text, 13)]
+    return ["".join(c).encode("utf8") for c in sliding_window(text, 13)]
 
 
 def hashify_32(features):
@@ -100,13 +103,13 @@ def benchmark(mh_func):
         sim_errs.append(abs(sim_sim - mh_sim_sim))
         dis_errs.append(abs(sim_dis - mh_sim_dis))
     print(
-        f'{mh_func.__name__}\t\t\t'
-        f'Rt: {mean(runtimes):.2f} - '
-        f'Error Sim Mean {mean(sim_errs)} - Max {max(sim_errs)} Var {variance(sim_errs)}| '
-        f'Error Dis Mean {mean(dis_errs)} - Max {max(dis_errs)} Var {variance(dis_errs)}'
+        f"{mh_func.__name__}\t\t\t"
+        f"Rt: {mean(runtimes):.2f} - "
+        f"Error Sim Mean {mean(sim_errs)} - Max {max(sim_errs)} Var {variance(sim_errs)}| "
+        f"Error Dis Mean {mean(dis_errs)} - Max {max(dis_errs)} Var {variance(dis_errs)}"
     )
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     for func in funcs:
         benchmark(func)

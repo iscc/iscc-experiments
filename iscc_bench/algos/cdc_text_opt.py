@@ -77,11 +77,11 @@ def chunk_text(stream: TextIO, NORM, GEAR, MASK_1, MASK_2):
 def objective(space):
     fps = list(mltext())
 
-    NORM = int(space['NORM'])
-    SEED = int(space['SEED'])
+    NORM = int(space["NORM"])
+    SEED = int(space["SEED"])
     GEAR = get_gear(SEED)
-    a = int(space['MASK_1'])
-    b = int(space['MASK_2'])
+    a = int(space["MASK_1"])
+    b = int(space["MASK_2"])
     MASK_1, MASK_2 = get_masks(SEED, a, b)
 
     losses = []
@@ -120,45 +120,43 @@ def objective(space):
         sim_dif = jaccard(chunks_hashes_a, chunks_hashes_c)
         dissimilarities.append(sim_dif)
         loss = (sim_dif or 0.00001) / (sim_sim or 0.00001)
-        logr.debug(f'Loss: {loss:.8f} Sim: {sim_sim:.3f} Dif: {sim_dif:.3f} ({basename(fp_a)})')
+        logr.debug(
+            f"Loss: {loss:.8f} Sim: {sim_sim:.3f} Dif: {sim_dif:.3f} ({basename(fp_a)})"
+        )
         losses.append(loss)
     return {
-        'status': 'ok',
-        'loss': mean(losses),
-        'avg_num_chunks': mean(num_chunks),
-        'avg_chunk_size': mean(chunk_sizes),
-        'max_chunk_size': max(chunk_sizes),
-        'avg_sim': mean(similarities),
-        'avg_dis': mean(dissimilarities),
-        'chunk_sizes': chunk_sizes,
+        "status": "ok",
+        "loss": mean(losses),
+        "avg_num_chunks": mean(num_chunks),
+        "avg_chunk_size": mean(chunk_sizes),
+        "max_chunk_size": max(chunk_sizes),
+        "avg_sim": mean(similarities),
+        "avg_dis": mean(dissimilarities),
+        "chunk_sizes": chunk_sizes,
     }
 
 
 def optimize():
     space = {
-        'NORM': hp.qloguniform('NORM', math.log(1024), math.log(8192), 1),
-        'SEED': hp.qloguniform('SEED', math.log(1), math.log(1000), 1),
-        'MASK_1': hp.quniform('MASK_1', 9, 15, 1),
-        'MASK_2': hp.quniform('MASK_2', 5, 13, 1),
+        "NORM": hp.qloguniform("NORM", math.log(1024), math.log(8192), 1),
+        "SEED": hp.qloguniform("SEED", math.log(1), math.log(1000), 1),
+        "MASK_1": hp.quniform("MASK_1", 9, 15, 1),
+        "MASK_2": hp.quniform("MASK_2", 5, 13, 1),
     }
 
     trials = Trials()
 
     best = fmin(
-        fn=objective,
-        space=space,
-        algo=tpe.suggest,
-        max_evals=30,
-        trials=trials,
+        fn=objective, space=space, algo=tpe.suggest, max_evals=30, trials=trials,
     )
-    print(f'Best Parameters: {best}')
+    print(f"Best Parameters: {best}")
     return trials.best_trial
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     import matplotlib.pyplot as plt
-    best = optimize()
-    cs = best['result']['chunk_sizes']
-    plt.hist(cs, color='blue', edgecolor='black', bins=int(8192/32))
-    plt.show()
 
+    best = optimize()
+    cs = best["result"]["chunk_sizes"]
+    plt.hist(cs, color="blue", edgecolor="black", bins=int(8192 / 32))
+    plt.show()

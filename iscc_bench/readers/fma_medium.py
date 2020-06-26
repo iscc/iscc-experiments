@@ -17,8 +17,8 @@ from iscc_bench.readers import utils
 
 
 DOWNLOAD_URL = "https://os.unil.cloud.switch.ch/fma/fma_medium.zip"
-DATA_PATH = os.path.join(DATA_DIR, 'fma_medium')
-DATA_FILE_PATH = os.path.join(DATA_PATH, 'fma_medium.zip')
+DATA_PATH = os.path.join(DATA_DIR, "fma_medium")
+DATA_FILE_PATH = os.path.join(DATA_PATH, "fma_medium.zip")
 
 log = logging.getLogger(__name__)
 
@@ -27,37 +27,37 @@ def fma_medium():
     """Yield file path to all audio tracks from fma_medium dataset."""
     try:
         os.makedirs(DATA_PATH)
-        log.info('Created data directory: {}'.format(DATA_PATH))
+        log.info("Created data directory: {}".format(DATA_PATH))
     except FileExistsError:
         pass
 
     if not os.path.exists(DATA_FILE_PATH):
 
-        log.info('Downloading fma_medium data: {}'.format(DATA_FILE_PATH))
+        log.info("Downloading fma_medium data: {}".format(DATA_FILE_PATH))
         utils.download(DOWNLOAD_URL, DATA_FILE_PATH)
 
-        log.info('Unpacking audio tracks: {}'.format(DATA_FILE_PATH))
+        log.info("Unpacking audio tracks: {}".format(DATA_FILE_PATH))
         with zipfile.ZipFile(DATA_FILE_PATH) as zf:
             zf.extractall(DATA_PATH)
 
-    for fp in utils.iter_files(DATA_PATH, exts=['mp3'], recursive=True):
+    for fp in utils.iter_files(DATA_PATH, exts=["mp3"], recursive=True):
         yield fp
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     from hashlib import sha1
-    log_format = '%(asctime)s - %(levelname)s - %(message)s'
+
+    log_format = "%(asctime)s - %(levelname)s - %(message)s"
     logging.basicConfig(level=logging.INFO, format=log_format)
 
     sigs = {}
-    log.info('check fma_medium for exact duplicate tracks')
+    log.info("check fma_medium for exact duplicate tracks")
     for audio_path in fma_medium():
         fname = os.path.basename(audio_path)
-        sig = sha1(open(audio_path, 'rb').read()).hexdigest()
+        sig = sha1(open(audio_path, "rb").read()).hexdigest()
         print(fname, sig)
         if sig not in sigs:
             sigs[sig] = audio_path
         else:
-            print('Collision: {} -> {}'.format(audio_path, sigs[sig]))
-    log.info('done checking fma_medium for exact duplicate tracks')
-
+            print("Collision: {} -> {}".format(audio_path, sigs[sig]))
+    log.info("done checking fma_medium for exact duplicate tracks")

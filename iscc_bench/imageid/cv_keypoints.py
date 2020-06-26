@@ -22,5 +22,5 @@ def compare(start_idx=468):
     cv2.waitKey(0)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     compare()

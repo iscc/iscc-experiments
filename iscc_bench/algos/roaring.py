@@ -23,7 +23,7 @@ from humanfriendly import format_size
 
 
 def ints(amount=1000000):
-    return [struct.unpack('<L', os.urandom(4))[0] for _ in range(amount)]
+    return [struct.unpack("<L", os.urandom(4))[0] for _ in range(amount)]
 
 
 def main():
@@ -31,10 +31,12 @@ def main():
         bm = BitMap(ints(x))
         data = bm.serialize()
         size = format_size(len(data))
-        print('For {} 32-bit ints we need {} storage instead of {}'.format(
-            x, size, format_size(4*x)
-        ))
+        print(
+            "For {} 32-bit ints we need {} storage instead of {}".format(
+                x, size, format_size(4 * x)
+            )
+        )
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

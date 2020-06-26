@@ -30,9 +30,9 @@ from iscc_bench import DATA_DIR, MetaData
 log = logging.getLogger(__name__)
 
 
-DATA_FILE = os.path.join(DATA_DIR, 'DNBtitel.rdf.gz')
-DATA_FILE_AUTHORS = os.path.join(DATA_DIR, 'GND.rdf.gz')
-INDEX_FILE_AUTHORS = os.path.join(DATA_DIR, 'gnd.sqlite')
+DATA_FILE = os.path.join(DATA_DIR, "DNBtitel.rdf.gz")
+DATA_FILE_AUTHORS = os.path.join(DATA_DIR, "GND.rdf.gz")
+INDEX_FILE_AUTHORS = os.path.join(DATA_DIR, "gnd.sqlite")
 
 
 def dnbrdf(path=DATA_FILE):
@@ -45,7 +45,8 @@ def dnbrdf(path=DATA_FILE):
         gzip.open(path),
         tag=(
             "{http://purl.org/ontology/bibo/}isbn10",
-            "{http://purl.org/ontology/bibo/}isbn13"),
+            "{http://purl.org/ontology/bibo/}isbn13",
+        ),
     )
     parent = None
 
@@ -53,7 +54,9 @@ def dnbrdf(path=DATA_FILE):
 
     # loop over every isbn10 or isbn13 element
     for event, elem in context:
-        if parent == elem.getparent():  # we iter over two tags so sometimes we visit the same parent more than one time
+        if (
+            parent == elem.getparent()
+        ):  # we iter over two tags so sometimes we visit the same parent more than one time
             continue
         else:
             parent = elem.getparent()
@@ -64,7 +67,7 @@ def dnbrdf(path=DATA_FILE):
         # accessed
         elem.clear()
         # Also eliminate now-empty references from the root node to elem
-        for ancestor in elem.xpath('ancestor-or-self::*'):
+        for ancestor in elem.xpath("ancestor-or-self::*"):
             while ancestor.getprevious() is not None:
                 del ancestor.getparent()[0]
     del context
@@ -76,7 +79,11 @@ def get_or_build_author_index(index_file=INDEX_FILE_AUTHORS):
     :param str index_file: path to persistent index file (sqlite)
     :return: SqliteDict
     """
-    return SqliteDict(index_file,  flag='r') if os.path.exists(INDEX_FILE_AUTHORS) else index_authors()
+    return (
+        SqliteDict(index_file, flag="r")
+        if os.path.exists(INDEX_FILE_AUTHORS)
+        else index_authors()
+    )
 
 
 def process_entry(elem, authors):
@@ -89,49 +96,73 @@ def process_entry(elem, authors):
             titles.append(child.text)
         # get creators
         if child.tag == "{http://purl.org/dc/terms/}creator":
-            resource = child.attrib.get('{http://www.w3.org/1999/02/22-rdf-syntax-ns#}resource')
+            resource = child.attrib.get(
+                "{http://www.w3.org/1999/02/22-rdf-syntax-ns#}resource"
+            )
             if resource is not None:
-                creator_id = str(resource).split('http://d-nb.info/gnd/')[1]
+                creator_id = str(resource).split("http://d-nb.info/gnd/")[1]
                 if authors.get(creator_id) is not None:
                     creators.append(authors[creator_id])
             else:
                 for description_tag in child.iterchildren():
-                    if description_tag.tag == "{http://www.w3.org/1999/02/22-rdf-syntax-ns#}Description":
+                    if (
+                        description_tag.tag
+                        == "{http://www.w3.org/1999/02/22-rdf-syntax-ns#}Description"
+                    ):
                         for creator_tag in description_tag.iterchildren():
-                            if creator_tag.tag == "{http://d-nb.info/standards/elementset/gnd#}preferredName" and creator_tag.text is not None:
+                            if (
+                                creator_tag.tag
+                                == "{http://d-nb.info/standards/elementset/gnd#}preferredName"
+                                and creator_tag.text is not None
+                            ):
                                 creators.append(creator_tag.text)
                             else:
-                                log.info('No Text in Creator Tag: Line {}'.format(description_tag.sourceline))
+                                log.info(
+                                    "No Text in Creator Tag: Line {}".format(
+                                        description_tag.sourceline
+                                    )
+                                )
                     else:
-                        log.info('No description Tag in Creator: Line {}'.format(description_tag.sourceline))
+                        log.info(
+                            "No description Tag in Creator: Line {}".format(
+                                description_tag.sourceline
+                            )
+                        )
         # get isbns
-        if child.tag == "{http://purl.org/ontology/bibo/}isbn10" and child.text is not None:
+        if (
+            child.tag == "{http://purl.org/ontology/bibo/}isbn10"
+            and child.text is not None
+        ):
             isbns.append(isbnlib.to_isbn13(child.text))
-        if child.tag == "{http://purl.org/ontology/bibo/}isbn13" and child.text is not None:
+        if (
+            child.tag == "{http://purl.org/ontology/bibo/}isbn13"
+            and child.text is not None
+        ):
             isbns.append(child.text)
     if len(titles) == 1 and len(creators) > 0:  # we need a title and a creator
         # add one entry for every different isbn
         for isbn in list(set(isbns)):
             if isbn is not None:
-                title = titles[0].split(' : ')[0]
+                title = titles[0].split(" : ")[0]
                 meta = MetaData(isbn, titles[0], ";".join(creators))
                 log.debug(meta)
                 yield meta
     else:
         if len(titles) > 1:
-            log.info('More than one title: Line {}'.format(elem.sourceline))
+            log.info("More than one title: Line {}".format(elem.sourceline))
 
 
 def index_authors(data_file=DATA_FILE_AUTHORS, index_file=INDEX_FILE_AUTHORS):
     """extract creators from gnd and save memory while iterating"""
     context = etree.iterparse(
-        gzip.open(data_file), tag="{http://www.w3.org/1999/02/22-rdf-syntax-ns#}Description",
+        gzip.open(data_file),
+        tag="{http://www.w3.org/1999/02/22-rdf-syntax-ns#}Description",
     )
 
     indexed = 0
     authors_idx = SqliteDict(index_file, autocommit=False)
 
-    log.info('Indexing GND authors (~13.6 Million)')
+    log.info("Indexing GND authors (~13.6 Million)")
 
     for event, elem in context:
         if not elem.attrib.get("{http://www.w3.org/1999/02/22-rdf-syntax-ns#}about"):
@@ -144,25 +175,26 @@ def index_authors(data_file=DATA_FILE_AUTHORS, index_file=INDEX_FILE_AUTHORS):
             continue
 
         if name is not None:
-            creator_id = \
-                str(elem.attrib.get("{http://www.w3.org/1999/02/22-rdf-syntax-ns#}about")).split('http://d-nb.info/gnd/')[1]
+            creator_id = str(
+                elem.attrib.get("{http://www.w3.org/1999/02/22-rdf-syntax-ns#}about")
+            ).split("http://d-nb.info/gnd/")[1]
             authors_idx[creator_id] = name
-            log.debug('Indexing GND Author {} -> {}'.format(creator_id, name))
+            log.debug("Indexing GND Author {} -> {}".format(creator_id, name))
 
             indexed += 1
             if not indexed % 100000:
-                log.info('Indexed {:,} authors'.format(indexed))
+                log.info("Indexed {:,} authors".format(indexed))
 
         # It's safe to call clear() here because no descendants will be
         # accessed
         elem.clear()
         # Also eliminate now-empty references from the root node to elem
-        for ancestor in elem.xpath('ancestor-or-self::*'):
+        for ancestor in elem.xpath("ancestor-or-self::*"):
             while ancestor.getprevious() is not None:
                 del ancestor.getparent()[0]
 
     authors_idx.commit()
-    log.info('Indexed {:,} authors'.format(len(authors_idx)))
+    log.info("Indexed {:,} authors".format(len(authors_idx)))
 
     del context
     return authors_idx
@@ -177,17 +209,17 @@ def extract_creator(elem):
         "{http://d-nb.info/standards/elementset/gnd#}preferredNameForTheSubjectHeading",
         "{http://d-nb.info/standards/elementset/gnd#}preferredNameForTheWork",
         "{http://d-nb.info/standards/elementset/gnd#}preferredNameForThePerson",
-        "{http://d-nb.info/standards/elementset/gnd#}preferredNameForTheFamily"
+        "{http://d-nb.info/standards/elementset/gnd#}preferredNameForTheFamily",
     ]
     for child in elem.iterchildren():
         if child.tag in preferred_tags:
             preferred += 1
             return child.text
 
+
 if __name__ == "__main__":
-    log_format = '%(asctime)s - %(levelname)s - %(message)s'
+    log_format = "%(asctime)s - %(levelname)s - %(message)s"
     logging.basicConfig(level=logging.INFO, format=log_format)
 
     for md in dnbrdf():
         print(md)
-

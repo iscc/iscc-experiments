@@ -40,17 +40,17 @@ def test_wta_hash():
     m = [[1, 4, 2, 5, 0, 3]]
     k = 4
     h = wta_hash(vec, m, k)
-    print(f'WTA-Hash for {vec} -> {h}')
+    print(f"WTA-Hash for {vec} -> {h}")
     assert h == [1]
     vec = [4, 5, 10, 2, 3, 1]
     h = wta_hash(vec, m, k)
-    print(f'WTA-Hash for {vec} -> {h}')
+    print(f"WTA-Hash for {vec} -> {h}")
     assert h == [2]
     k = 2
     h = wta_hash(vec, m, k)
-    print(f'WTA-Hash for {vec} with k == {k} -> {h}')
+    print(f"WTA-Hash for {vec} with k == {k} -> {h}")
     assert h == 2
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     test_wta_hash()

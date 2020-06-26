@@ -17,9 +17,9 @@ from tabulate import tabulate
 
 es = Elasticsearch()
 
-IMAGE_DIR = os.path.join(DATA_DIR, 'images')
+IMAGE_DIR = os.path.join(DATA_DIR, "images")
 
-mapping_image = '''
+mapping_image = """
 {
   "mappings": {
     "default": {
@@ -56,7 +56,7 @@ mapping_image = '''
       }
     }
   }
-}'''
+}"""
 
 
 def discrete_cosine_transform(value_list):
@@ -94,7 +94,7 @@ def my_median(lst):
     if n % 2 == 1:
         return lst[n // 2]
     else:
-        return sum(lst[n // 2 - 1:n // 2 + 1]) / 2.0
+        return sum(lst[n // 2 - 1 : n // 2 + 1]) / 2.0
 
 
 def wavelet2d(data):
@@ -129,18 +129,20 @@ def a_hash(img_file):
     avg = sum(pixels) / len(pixels)
 
     bit_array = [pixel > avg for pixel in pixels]
-    bitstring = ''
+    bitstring = ""
     for bit in bit_array:
         if bit:
-            bitstring += '1'
+            bitstring += "1"
         else:
-            bitstring += '0'
+            bitstring += "0"
     return ImageID(ident=int(bitstring, 2), bits=64)
 
 
 def b_hash(img_file):
     image = Image.open(img_file)
-    image = image.convert("L").resize((min(image.size[0], 256), min(image.size[1], 256)), Image.BICUBIC)
+    image = image.convert("L").resize(
+        (min(image.size[0], 256), min(image.size[1], 256)), Image.BICUBIC
+    )
     image = image.convert("RGB")
     b_hash = blockhash(image, 8)
     b_hash = int(b_hash, 16)
@@ -151,13 +153,13 @@ def d_hash(img_file):
     image = Image.open(img_file)
     image = image.convert("L").resize((9, 8), Image.BICUBIC)
     pixel = list(image.getdata())
-    bitstring = ''
+    bitstring = ""
     for row in range(8):
         for col in range(8):
             if pixel[9 * row + col] < pixel[9 * row + col + 1]:
-                bitstring += '1'
+                bitstring += "1"
             else:
-                bitstring += '0'
+                bitstring += "0"
 
     return ImageID(ident=int(bitstring, 2), bits=64)
 
@@ -209,30 +211,33 @@ def w_hash(img_file):
     # Substract median and compute hash
     med = my_median(w2d_flat)
     diff = [w2d_flat[i] > med for i in range(64)]
-    bitstring = ''
+    bitstring = ""
     for bit in diff:
         if bit:
-            bitstring = bitstring + '1'
+            bitstring = bitstring + "1"
         else:
-            bitstring = bitstring + '0'
+            bitstring = bitstring + "0"
     return ImageID(ident=int(bitstring, 2), bits=64)
 
 
 def get_error_types():
-    total = es.count(index='iscc_images')['count']
-    group_by = '{"size": 0, "aggs": {"group_by_state": {"terms": {"field": "errorType", "size": %s}}}}' % total
-    res = es.search('iscc_images', body=group_by)
-    buckets = res['aggregations']['group_by_state']['buckets']
-    errorTypes = [bucket['key'] for bucket in buckets]
-    errorTypes.remove('original')
+    total = es.count(index="iscc_images")["count"]
+    group_by = (
+        '{"size": 0, "aggs": {"group_by_state": {"terms": {"field": "errorType", "size": %s}}}}'
+        % total
+    )
+    res = es.search("iscc_images", body=group_by)
+    buckets = res["aggregations"]["group_by_state"]["buckets"]
+    errorTypes = [bucket["key"] for bucket in buckets]
+    errorTypes.remove("original")
     errorTypes.sort()
     return errorTypes
 
 
 def init_index():
-    if es.indices.exists(index='iscc_images'):
-        es.indices.delete(index='iscc_images')
-    es.indices.create(index='iscc_images', body=mapping_image)
+    if es.indices.exists(index="iscc_images"):
+        es.indices.delete(index="iscc_images")
+    es.indices.create(index="iscc_images", body=mapping_image)
 
 
 def action_generator():
@@ -242,14 +247,14 @@ def action_generator():
     p_time = 0
     w_time = 0
     total = 0
-    total = es.count(index='iscc_images')['count']
+    total = es.count(index="iscc_images")["count"]
     for image in os.listdir(IMAGE_DIR):
         img_file = os.path.join(IMAGE_DIR, image)
-        name = image.split('.')[0]
-        if len(name.split('_')) > 1:
-            errorType = name.split('_')[1]
+        name = image.split(".")[0]
+        if len(name.split("_")) > 1:
+            errorType = name.split("_")[1]
         else:
-            errorType = 'original'
+            errorType = "original"
         start_time = time.time()
         aiid = a_hash(img_file)
         a_time += time.time() - start_time
@@ -269,9 +274,15 @@ def action_generator():
         query = {
             "_index": "iscc_images",
             "_type": "default",
-            "_source": {"name": name.split('_')[0], "errorType": errorType,
-                        "wHash": "{}".format(wiid), "dHash": "{}".format(diid), "aHash": "{}".format(aiid),
-                        "pHash": "{}".format(piid), "bHash": "{}".format(biid)}
+            "_source": {
+                "name": name.split("_")[0],
+                "errorType": errorType,
+                "wHash": "{}".format(wiid),
+                "dHash": "{}".format(diid),
+                "aHash": "{}".format(aiid),
+                "pHash": "{}".format(piid),
+                "bHash": "{}".format(biid),
+            },
         }
         yield query
     print("aHash:", a_time / total)
@@ -292,22 +303,25 @@ def generate_ids():
 
 
 def check_values(hash):
-    total = es.count(index='iscc_images')['count']
+    total = es.count(index="iscc_images")["count"]
     errors = {}
-    group_by = '{"size": 0, "aggs": {"group_by_state": {"terms": {"field": "name", "size": %s}}}}' % total
-    res = es.search('iscc_images', body=group_by)
-    buckets = res['aggregations']['group_by_state']['buckets']
+    group_by = (
+        '{"size": 0, "aggs": {"group_by_state": {"terms": {"field": "name", "size": %s}}}}'
+        % total
+    )
+    res = es.search("iscc_images", body=group_by)
+    buckets = res["aggregations"]["group_by_state"]["buckets"]
     for bucket in buckets:
-        if bucket['doc_count'] > 1:
-            get_by_key = {"query": {"terms": {'name': [bucket['key']]}}}
+        if bucket["doc_count"] > 1:
+            get_by_key = {"query": {"terms": {"name": [bucket["key"]]}}}
             value = None
-            for entry in helpers.scan(es, index='iscc_images', query=get_by_key):
-                if entry['_source']['errorType'] == "original":
-                    value = entry['_source'][hash]
-            for entry in helpers.scan(es, index='iscc_images', query=get_by_key):
-                if not value == entry['_source'][hash]:
-                    errorType = entry['_source']['errorType']
-                    imageName = entry['_source']['name']
+            for entry in helpers.scan(es, index="iscc_images", query=get_by_key):
+                if entry["_source"]["errorType"] == "original":
+                    value = entry["_source"][hash]
+            for entry in helpers.scan(es, index="iscc_images", query=get_by_key):
+                if not value == entry["_source"][hash]:
+                    errorType = entry["_source"]["errorType"]
+                    imageName = entry["_source"]["name"]
                     if not errorType in errors:
                         errors[errorType] = [imageName]
                     else:
@@ -316,22 +330,25 @@ def check_values(hash):
 
 
 def get_hamming(hash):
-    total = es.count(index='iscc_images')['count']
+    total = es.count(index="iscc_images")["count"]
     distances = {}
-    group_by = '{"size": 0, "aggs": {"group_by_state": {"terms": {"field": "name", "size": %s}}}}' % total
-    res = es.search('iscc_images', body=group_by)
-    buckets = res['aggregations']['group_by_state']['buckets']
+    group_by = (
+        '{"size": 0, "aggs": {"group_by_state": {"terms": {"field": "name", "size": %s}}}}'
+        % total
+    )
+    res = es.search("iscc_images", body=group_by)
+    buckets = res["aggregations"]["group_by_state"]["buckets"]
 
     for bucket in buckets:
-        if bucket['doc_count'] > 1:
-            get_by_key = {"query": {"terms": {'name': [bucket['key']]}}}
+        if bucket["doc_count"] > 1:
+            get_by_key = {"query": {"terms": {"name": [bucket["key"]]}}}
             value = None
-            for entry in helpers.scan(es, index='iscc_images', query=get_by_key):
-                if entry['_source']['errorType'] == "original":
-                    value = entry['_source'][hash]
-            for entry in helpers.scan(es, index='iscc_images', query=get_by_key):
-                hamming_dist = hamming_distance(value, entry['_source'][hash])
-                errorType = entry['_source']['errorType']
+            for entry in helpers.scan(es, index="iscc_images", query=get_by_key):
+                if entry["_source"]["errorType"] == "original":
+                    value = entry["_source"][hash]
+            for entry in helpers.scan(es, index="iscc_images", query=get_by_key):
+                hamming_dist = hamming_distance(value, entry["_source"][hash])
+                errorType = entry["_source"]["errorType"]
                 if not errorType in distances:
                     distances[errorType] = [hamming_dist]
                 else:
@@ -342,7 +359,7 @@ def get_hamming(hash):
 def evaluate():
     errors = {}
     hamming_distances = {}
-    hashes = ['aHash', 'bHash', 'dHash', 'pHash', 'wHash']
+    hashes = ["aHash", "bHash", "dHash", "pHash", "wHash"]
     for hash in hashes:
         errors[hash] = check_values(hash)
 
@@ -358,7 +375,7 @@ def evaluate():
         table_rows.append(table_row)
     print("\nDifferent Hashes (higher is worse)")
 
-    totals = ['Total']
+    totals = ["Total"]
     for hash in hashes:
         hash_sum = 0
         for type in errorTypes:
@@ -366,7 +383,7 @@ def evaluate():
                 hash_sum += len(errors[hash][type])
         totals.append(hash_sum)
     table_rows.append(totals)
-    print(tabulate(table_rows, headers=['Error Type'] + hashes))
+    print(tabulate(table_rows, headers=["Error Type"] + hashes))
 
     for hash in hashes:
         hamming_distances[hash] = get_hamming(hash)
@@ -381,46 +398,55 @@ def evaluate():
             else:
                 table_row.append(0)
         table_rows.append(table_row)
-    averages = ['Average']
+    averages = ["Average"]
     for hash in hashes:
         hamming_sum = 0
         for type in errorTypes:
             if type in hamming_distances[hash]:
-                hamming_sum += sum(hamming_distances[hash][type]) / len(hamming_distances[hash][type])
+                hamming_sum += sum(hamming_distances[hash][type]) / len(
+                    hamming_distances[hash][type]
+                )
         averages.append(hamming_sum / len(errorTypes))
     table_rows.append(averages)
     print("\nAverage Hamming Distances")
-    print(tabulate(table_rows, headers=['Error Type'] + hashes))
+    print(tabulate(table_rows, headers=["Error Type"] + hashes))
 
 
 def find_hash_collisions(hash):
     collisions = 0
-    total = es.count(index='iscc_images')['count']
-    group_by = '{"size": 0, "aggs": {"group_by_state": {"terms": {"field": "%s", "size": %s}}}}' % (hash, total)
-    res = es.search('iscc_images', body=group_by)
-    buckets = res['aggregations']['group_by_state']['buckets']
+    total = es.count(index="iscc_images")["count"]
+    group_by = (
+        '{"size": 0, "aggs": {"group_by_state": {"terms": {"field": "%s", "size": %s}}}}'
+        % (hash, total)
+    )
+    res = es.search("iscc_images", body=group_by)
+    buckets = res["aggregations"]["group_by_state"]["buckets"]
     for bucket in buckets:
-        if bucket['doc_count'] > 1:
-            get_by_key = {"query": {"terms": {hash: [bucket['key']]}}}
+        if bucket["doc_count"] > 1:
+            get_by_key = {"query": {"terms": {hash: [bucket["key"]]}}}
             name = None
             error_type = None
-            for entry in helpers.scan(es, index='iscc_images', query=get_by_key):
-                entry_name = entry['_source']['name']
-                entry_error_type = entry['_source']['errorType']
+            for entry in helpers.scan(es, index="iscc_images", query=get_by_key):
+                entry_name = entry["_source"]["name"]
+                entry_error_type = entry["_source"]["errorType"]
                 if name is None:
-                    name = entry['_source']['name']
+                    name = entry["_source"]["name"]
                     error_type = entry_error_type
                 else:
                     if name != entry_name:
                         collisions += 1
-                        print('\nCollision in hash {} = {}:'.format(hash, bucket['key']))
-                        print('Image 1: %s with error %s' % (name, error_type))
-                        print('Image 2: %s with error %s' % (entry_name, entry_error_type))
+                        print(
+                            "\nCollision in hash {} = {}:".format(hash, bucket["key"])
+                        )
+                        print("Image 1: %s with error %s" % (name, error_type))
+                        print(
+                            "Image 2: %s with error %s" % (entry_name, entry_error_type)
+                        )
     return collisions
 
 
 def count_collisions():
-    hashes = ['aHash', 'bHash', 'dHash', 'pHash', 'wHash']
+    hashes = ["aHash", "bHash", "dHash", "pHash", "wHash"]
     collisions = {}
     for hash in hashes:
         collisions[hash] = find_hash_collisions(hash)
@@ -430,7 +456,7 @@ def count_collisions():
         print("%s collisions in hash %s" % (collision_count, hash))
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     init_index()
     generate_ids()
     time.sleep(10)

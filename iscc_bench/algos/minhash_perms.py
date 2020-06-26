@@ -183,11 +183,14 @@ def get_perms(seed=1):
     rand = np.random.RandomState(seed=seed)
     perms = np.array(
         [
-            (rand.randint(1, mprime, dtype=np.uint64),
-             rand.randint(0, mprime, dtype=np.uint64))
+            (
+                rand.randint(1, mprime, dtype=np.uint64),
+                rand.randint(0, mprime, dtype=np.uint64),
+            )
             for _ in range(256)
         ],
-        dtype=np.uint64).T
+        dtype=np.uint64,
+    ).T
     perms[0] = np.bitwise_or(perms[0], 1)
     return perms
 
@@ -255,12 +258,16 @@ def find_perms():
             sim_sig_256 = jaccard(mhash_sigs[0], mhash_sigs[1])
             sim_sig_64_err = abs(sim - sim_sig_64)
             sim_sig_256_err = abs(sim - sim_sig_256)
-            mhash_hashes = [[(i, x & 1) for i, x in enumerate(ms.tolist())] for ms in mhash_sigs]
+            mhash_hashes = [
+                [(i, x & 1) for i, x in enumerate(ms.tolist())] for ms in mhash_sigs
+            ]
             sim_mh_64 = jaccard(mhash_hashes[0][:64], mhash_hashes[1][:64])
             sim_mh_256 = jaccard(mhash_hashes[0], mhash_hashes[1])
             sim_mh_64_err = abs(sim - sim_mh_64)
             sim_mh_256_err = abs(sim - sim_mh_256)
-            print(f'Errors: Mh64 {sim_mh_64_err}, Mh256 {sim_mh_256_err}, Sig64 {sim_sig_64_err}, Sig256 {sim_sig_256_err}')
+            print(
+                f"Errors: Mh64 {sim_mh_64_err}, Mh256 {sim_mh_256_err}, Sig64 {sim_sig_64_err}, Sig256 {sim_sig_256_err}"
+            )
             errs64.append(sim_mh_64_err)
             errs256.append(sim_mh_256_err)
         results[seed] = (mean(errs64), mean(errs256))

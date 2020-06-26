@@ -19,10 +19,10 @@ def benchmark(norm_func=iscc.text_normalize):
     fps = list(gutenberg())
     rts_abs = []  # Absolute runtimes
     rts_chr = []  # Runtimes per character
-    ratios = []   # Size reduction ratios
+    ratios = []  # Size reduction ratios
     samples = []
     for fp in fps:
-        with open(fp, 'r', encoding='utf-8') as infile:
+        with open(fp, "r", encoding="utf-8") as infile:
             text = infile.read()
         start = time.time()
         text_norm = norm_func(text)
@@ -38,17 +38,23 @@ def benchmark(norm_func=iscc.text_normalize):
         ratios.append(ratio)
         samples.append(text_norm[5000:5256])
 
-    print(f'Runtime Absolute: Avg {mean(rts_abs):.5f} - Min {min(rts_abs):.5f} - Max {max(rts_abs):.5f}')
-    print(f'Runtime / Char:   Avg {mean(rts_chr):.5f} - Min {min(rts_chr):.5f} - Max {max(rts_chr):.5f}')
-    print(f'Size Ratio:       Avg {mean(ratios):.5f} - Min {min(ratios):.5f} - Max {max(ratios):.5f}')
+    print(
+        f"Runtime Absolute: Avg {mean(rts_abs):.5f} - Min {min(rts_abs):.5f} - Max {max(rts_abs):.5f}"
+    )
+    print(
+        f"Runtime / Char:   Avg {mean(rts_chr):.5f} - Min {min(rts_chr):.5f} - Max {max(rts_chr):.5f}"
+    )
+    print(
+        f"Size Ratio:       Avg {mean(ratios):.5f} - Min {min(ratios):.5f} - Max {max(ratios):.5f}"
+    )
 
 
 def whitespace_norm(text):
-    return ' '.join(text.split())
+    return " ".join(text.split())
 
 
 def nfc_norm(text):
-    return unicodedata.normalize('NFC', text)
+    return unicodedata.normalize("NFC", text)
 
 
 def filter_norm(text):
@@ -59,7 +65,7 @@ def filter_norm(text):
         cat = unicodedata.category(char)
         if cat == "Mn":
             continue
-        if cat[0] in 'LSNZ':
+        if cat[0] in "LSNZ":
             output.append(char)
     filtered = "".join(output)
     return filtered
@@ -71,7 +77,7 @@ def lower(text):
 
 def minimal_fast(text):
     text = unicodedata.normalize("NFC", text)
-    text = ''.join(text.split())
+    text = "".join(text.split())
     text = text.lower()
     return text
 
@@ -82,7 +88,7 @@ def norm_filter(text):
     return text
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     # print('Benchmarking iscc reference ...\n')
     # benchmark(iscc.text_normalize)
     #
@@ -92,8 +98,8 @@ if __name__ == '__main__':
     # print('\n\nBenchmark filter_norm (remove accents) ... \n')
     # benchmark(norm_filter)
 
-    print('\n\nNew text normalization (v.1.1). Simple reference implementation \n')
+    print("\n\nNew text normalization (v.1.1). Simple reference implementation \n")
     benchmark(text_normalize_simple)
 
-    print('\n\nNew text normalization (v.1.1). Performance optimized implementation \n')
+    print("\n\nNew text normalization (v.1.1). Performance optimized implementation \n")
     benchmark(text_normalize)

@@ -17,10 +17,10 @@ def download(url, save_to, chunk_size=1000000):
     :param int chunk_size: chunk size in bytes
     """
 
-    log.info('Downloading %s -> %s' % (url, save_to))
+    log.info("Downloading %s -> %s" % (url, save_to))
     r = requests.get(url, stream=True)
-    with open(save_to, 'wb') as f:
-        pbar = tqdm(unit="B", total=int(r.headers['Content-Length']))
+    with open(save_to, "wb") as f:
+        pbar = tqdm(unit="B", total=int(r.headers["Content-Length"]))
         for chunk in r.iter_content(chunk_size=chunk_size):
             if chunk:
                 pbar.update(len(chunk))
@@ -47,13 +47,13 @@ def iter_files(root, exts=None, recursive=False):
 
     if recursive is False:
         for entry in os.scandir(root):
-            ext = os.path.splitext(entry.name)[-1].lstrip('.').lower()
+            ext = os.path.splitext(entry.name)[-1].lstrip(".").lower()
             if entry.is_file() and matches(ext):
                 yield entry.path
     else:
         for root, folders, files in os.walk(root):
             for f in files:
-                ext = os.path.splitext(f)[-1].lstrip('.').lower()
+                ext = os.path.splitext(f)[-1].lstrip(".").lower()
                 if matches(ext):
                     yield os.path.join(root, f)
 

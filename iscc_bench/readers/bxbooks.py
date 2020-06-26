@@ -8,7 +8,7 @@ import logging
 log = logging.getLogger(__name__)
 
 
-BXBOOKS_DATA = os.path.join(DATA_DIR, 'BX-Books.csv')
+BXBOOKS_DATA = os.path.join(DATA_DIR, "BX-Books.csv")
 
 
 def bxbooks(path=BXBOOKS_DATA):
@@ -20,20 +20,20 @@ def bxbooks(path=BXBOOKS_DATA):
     :yield: MedaData
     """
     with open(path) as csv_file:
-        reader = csv.DictReader(csv_file, delimiter=';')
+        reader = csv.DictReader(csv_file, delimiter=";")
         for row in reader:
 
-            if isbnlib.notisbn(row['ISBN']):
-                log.info('Skip row with invalid ISBN {}'.format(row['ISBN']))
+            if isbnlib.notisbn(row["ISBN"]):
+                log.info("Skip row with invalid ISBN {}".format(row["ISBN"]))
                 continue
 
             yield MetaData(
-                isbn=isbnlib.to_isbn13(row['ISBN']),
-                title=row['Book-Title'].split(' : ')[0],
-                author=row['Book-Author']
+                isbn=isbnlib.to_isbn13(row["ISBN"]),
+                title=row["Book-Title"].split(" : ")[0],
+                author=row["Book-Author"],
             )
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     for entry in bxbooks():
         print(entry)

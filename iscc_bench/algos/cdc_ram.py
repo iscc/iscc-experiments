@@ -23,7 +23,7 @@ SAMPLES = 16  # Number of samples to eval (even number below 476)
 
 def cut_point(data: bytes, min_size=CHUNK_MIN_SIZE) -> int:
     """Find first cut point in byte string"""
-    prefix = data[:min_size - 1]
+    prefix = data[: min_size - 1]
     max_byte = max(prefix)
     i = min_size
     while i < len(data):
@@ -35,7 +35,7 @@ def cut_point(data: bytes, min_size=CHUNK_MIN_SIZE) -> int:
 
 def cut_point2(data: bytes, min_size=6, max_size=1000, shift=4) -> int:
     """Find first cut point in byte string"""
-    prefix = data[:min_size - 1]
+    prefix = data[: min_size - 1]
     max_byte = max(prefix)
     max_byte2 = max_byte - shift
     secondary = None
@@ -62,11 +62,11 @@ def chunk_text(text: str, min_size: int = CHUNK_MIN_SIZE) -> List[str]:
     Note: Cutpoints may occur within multibyte characters. Those characters
     will be skipped by this chunking method.
     """
-    data = text.encode('utf-8')
+    data = text.encode("utf-8")
     chunks = []
     while data:
         cp = cut_point(data, min_size=min_size)
-        chunks.append(data[:cp].decode('utf-8', 'ignore'))
+        chunks.append(data[:cp].decode("utf-8", "ignore"))
         data = data[cp:]
     return chunks
 
@@ -88,11 +88,11 @@ def chunk_data(data, min_size, max_size, shift) -> List[bytes]:
 def objective(space):
     fps = list(mltext())[:SAMPLES]
 
-    min_size = int(space['min_size'])
-    max_size = int(space['max_size'])
-    shift = int(space['shift'])
+    min_size = int(space["min_size"])
+    max_size = int(space["max_size"])
+    shift = int(space["shift"])
 
-    logr.info(f'Evaluate chunking with min {min_size} ({SAMPLES} samples).')
+    logr.info(f"Evaluate chunking with min {min_size} ({SAMPLES} samples).")
     losses = []
     chunk_sizes = []
     num_chunks = []
@@ -104,9 +104,9 @@ def objective(space):
         if fp_c is None:
             fp_c = fps[0]
 
-        text_a = open(fp_a, 'rb').read()
-        text_b = open(fp_b, 'rb').read()
-        text_c = open(fp_c, 'rb').read()
+        text_a = open(fp_a, "rb").read()
+        text_b = open(fp_b, "rb").read()
+        text_c = open(fp_c, "rb").read()
 
         chunks_a = chunk_data(text_a, min_size, max_size, shift)
         chunks_b = chunk_data(text_b, min_size, max_size, shift)
@@ -132,47 +132,42 @@ def objective(space):
         dissimilarities.append(sim_dif)
         loss = sim_sim / (sim_dif or 0.00001)
 
-        logr.debug(f'Loss: {loss:.3f} Sim: {sim_sim:.3f} Dif: {sim_dif:.3f} ({basename(fp_a)})')
+        logr.debug(
+            f"Loss: {loss:.3f} Sim: {sim_sim:.3f} Dif: {sim_dif:.3f} ({basename(fp_a)})"
+        )
         losses.append(loss)
     loss = mean(losses)
-    plt.hist(chunk_sizes, color='blue', edgecolor='black',
-             bins=int(max_size/16)
-             )
-    plt.title(f'Min: {min_size} - Max {max_size} - Shift {shift}')
+    plt.hist(chunk_sizes, color="blue", edgecolor="black", bins=int(max_size / 16))
+    plt.title(f"Min: {min_size} - Max {max_size} - Shift {shift}")
     plt.show()
     return {
-        'status': 'ok',
-        'loss': loss,
-        'avg_num_chunks': mean(num_chunks),
-        'avg_chunk_size': mean(chunk_sizes),
-        'max_chunk_size': max(chunk_sizes),
-        'avg_sim': mean(similarities),
-        'avg_dis': mean(dissimilarities),
+        "status": "ok",
+        "loss": loss,
+        "avg_num_chunks": mean(num_chunks),
+        "avg_chunk_size": mean(chunk_sizes),
+        "max_chunk_size": max(chunk_sizes),
+        "avg_sim": mean(similarities),
+        "avg_dis": mean(dissimilarities),
     }
 
 
 def optimize():
     space = {
-        'min_size': hp.qloguniform('min_size', log(40), log(256), 1),
-        'max_size': hp.qloguniform('max_size', log(512), log(8000), 1),
-        'shift': hp.qloguniform('shift', log(2), log(16), 1)
+        "min_size": hp.qloguniform("min_size", log(40), log(256), 1),
+        "max_size": hp.qloguniform("max_size", log(512), log(8000), 1),
+        "shift": hp.qloguniform("shift", log(2), log(16), 1),
     }
 
     trials = Trials()
 
     best = fmin(
-        fn=objective,
-        space=space,
-        algo=tpe.suggest,
-        max_evals=32,
-        trials=trials,
+        fn=objective, space=space, algo=tpe.suggest, max_evals=32, trials=trials,
     )
     pprint(trials.best_trial)
-    print(f'Best Parameters: {best}')
+    print(f"Best Parameters: {best}")
 
 
-
-if __name__ == '__main__':
+if __name__ == "__main__":
     # log_format = '%(asctime)s - %(levelname)s - %(message)s'
     # logging.basicConfig(level=logging.DEBUG, format=log_format)
     optimize()

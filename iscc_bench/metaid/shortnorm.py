@@ -8,15 +8,15 @@ def shortest_normalization_form():
 
     Result NFKC
     """
-    s = 'Iñtërnâtiônàlizætiøn☃ and string escaping are ticky &#160; things'
-    nfc = unicodedata.normalize('NFC', s)
-    nfd = unicodedata.normalize('NFD', s)
-    nfkc = unicodedata.normalize('NFKC', s)
-    nfkd = unicodedata.normalize('NFKD', s)
-    nfd_nfkc = unicodedata.normalize('NFKC', nfd)
-    nfd_nfc = unicodedata.normalize('NFC', nfd)
+    s = "Iñtërnâtiônàlizætiøn☃ and string escaping are ticky &#160; things"
+    nfc = unicodedata.normalize("NFC", s)
+    nfd = unicodedata.normalize("NFD", s)
+    nfkc = unicodedata.normalize("NFKC", s)
+    nfkd = unicodedata.normalize("NFKD", s)
+    nfd_nfkc = unicodedata.normalize("NFKC", nfd)
+    nfd_nfc = unicodedata.normalize("NFC", nfd)
 
-    print('UTF-8 length of normalized strings:\n')
+    print("UTF-8 length of normalized strings:\n")
     print(f'NFC: {len(nfc.encode("utf8"))}')
     print(f'NFD: {len(nfd.encode("utf8"))}')
     print(f'NFKC: {len(nfkc.encode("utf8"))}')
@@ -25,5 +25,5 @@ def shortest_normalization_form():
     print(f'NFD_NFC: {len(nfd_nfc.encode("utf8"))}')
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     shortest_normalization_form()

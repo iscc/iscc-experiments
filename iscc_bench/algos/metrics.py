@@ -31,19 +31,19 @@ def cosine(seq1, seq2):
 def containment(seq1, seq2):
     set1, set2 = set(seq1), set(seq2)
     if not all((set1, set2)):
-        raise ValueError('Empty set')
+        raise ValueError("Empty set")
     inter = set1.intersection(set2)
     l_inter = len(inter)
     return max(l_inter / len(set1), l_inter / len(set2))
 
 
-if __name__ == '__main__':
-    print('Jac iden:\t', jaccard('ABCD', 'ABCD'))
-    print('Cos iden:\t', cosine('ABCD', 'ABCD'))
-    print('Con iden:\t', containment('ABCD', 'ABCD'))
-    print('Jac simi:\t', jaccard('ABCDFFF', 'AEDCF'))
-    print('Cos simi:\t', cosine('ABCDFFF', 'AEDCF'))
-    print('Con simi:\t', containment('ABCDFFF', 'AEDCF'))
-    print('Jac diff:\t', jaccard('ABCD', 'EFGHI'))
-    print('Cos diff:\t', cosine('ABCD', 'EFGHI'))
-    print('Con diff:\t', containment('ABCD', 'EFGHI'))
+if __name__ == "__main__":
+    print("Jac iden:\t", jaccard("ABCD", "ABCD"))
+    print("Cos iden:\t", cosine("ABCD", "ABCD"))
+    print("Con iden:\t", containment("ABCD", "ABCD"))
+    print("Jac simi:\t", jaccard("ABCDFFF", "AEDCF"))
+    print("Cos simi:\t", cosine("ABCDFFF", "AEDCF"))
+    print("Con simi:\t", containment("ABCDFFF", "AEDCF"))
+    print("Jac diff:\t", jaccard("ABCD", "EFGHI"))
+    print("Cos diff:\t", cosine("ABCD", "EFGHI"))
+    print("Con diff:\t", containment("ABCD", "EFGHI"))

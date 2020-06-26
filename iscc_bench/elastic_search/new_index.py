@@ -4,7 +4,7 @@ from elasticsearch import Elasticsearch
 
 es = Elasticsearch()
 
-mapping_data = '''
+mapping_data = """
 {
   "mappings": {
     "default": {
@@ -33,9 +33,9 @@ mapping_data = '''
       }
     }
   }
-}'''
+}"""
 
-mapping_id = '''
+mapping_id = """
 {
   "mappings": {
     "default": {
@@ -52,9 +52,9 @@ mapping_id = '''
       }
     }
   }
-}'''
+}"""
 
-mapping_result = '''
+mapping_result = """
 {
   "mappings": {
     "default": {
@@ -95,28 +95,28 @@ mapping_result = '''
       }
     }
   }
-}'''
+}"""
 
 
 def new_data_index():
-    if es.indices.exists(index='iscc_meta_data'):
-        es.indices.delete(index='iscc_meta_data')
-    es.indices.create(index='iscc_meta_data', body=mapping_data)
+    if es.indices.exists(index="iscc_meta_data"):
+        es.indices.delete(index="iscc_meta_data")
+    es.indices.create(index="iscc_meta_data", body=mapping_data)
 
 
 def new_id_index():
-    if es.indices.exists(index='iscc_meta_id'):
-        es.indices.delete(index='iscc_meta_id')
-    es.indices.create(index='iscc_meta_id', body=mapping_id)
+    if es.indices.exists(index="iscc_meta_id"):
+        es.indices.delete(index="iscc_meta_id")
+    es.indices.create(index="iscc_meta_id", body=mapping_id)
 
 
 def new_result_index():
-    if es.indices.exists(index='iscc_result'):
-        es.indices.delete(index='iscc_result')
-    es.indices.create(index='iscc_result', body=mapping_result)
+    if es.indices.exists(index="iscc_result"):
+        es.indices.delete(index="iscc_result")
+    es.indices.create(index="iscc_result", body=mapping_result)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     new_data_index()
     new_id_index()
     new_result_index()
