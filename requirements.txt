@@ -11,4 +11,4 @@ tqdm==4.14.0
 requests>=2.20.0
 tabulate==0.7.7
 Pillow
-opencv-python==3.4.0.12
+opencv-python==4.2.0.32
